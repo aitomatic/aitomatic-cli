@@ -1,0 +1,2 @@
+# cli
+Aitomatic CLI
