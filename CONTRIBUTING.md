@@ -32,4 +32,21 @@ pip install -r requirements.txt
 
 ## Steps to install the CLI to virtual environment and test it
 
+1. Remove old CLI package in local
+```shell
+rm -rf .venv/bin/aitomatic aitomatic.egg-info
+```
+2. Run command to install CLI
+```shell
+python setup.py develop
+```
+3. Verify the CLI
+```shell
+which aitomatic
+```
+4. Run CLI hello command
+```shell
+aitomatic hello
+```
+
 ## Steps to package and distribute CLI to PyPI
