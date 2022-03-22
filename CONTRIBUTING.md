@@ -30,6 +30,15 @@ pip install -r requirements.txt
 
 ## Steps to test code in local
 
+1. Run `black` command to format code
+```shell
+black -S .
+```
+2. Run command to test script
+```shell
+python aitomatic.py hello
+```
+
 ## Steps to install the CLI to virtual environment and test it
 
 1. Remove old CLI package in local
