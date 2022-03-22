@@ -19,7 +19,11 @@ virtualenv .venv -p python3
 ```shell
 source .venv/bin/activate
 ```
-3. Install libraries in file requirements.txt
+3. Install `setuptools` to package code, `twine` to distribute package to PyPI and `black` to format python code
+```shell
+pip install setuptools twine black
+```
+4. Install libraries in file requirements.txt
 ```shell
 pip install -r requirements.txt
 ```
