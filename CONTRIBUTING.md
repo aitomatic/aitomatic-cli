@@ -36,24 +36,20 @@ black -S .
 ```
 2. Run command to test script
 ```shell
-python aitomatic.py hello
+python src/aitomatic.py hello
 ```
 
 ## Steps to install the CLI to virtual environment and test it
 
-1. Remove old CLI package in local
+1. Run command to install CLI
 ```shell
-rm -rf .venv/bin/aitomatic aitomatic.egg-info
+pip install -e .
 ```
-2. Run command to install CLI
-```shell
-python setup.py develop
-```
-3. Verify the CLI
+2. Verify the CLI
 ```shell
 which aitomatic
 ```
-4. Run CLI hello command
+3. Run `aitomatic hello` command
 ```shell
 aitomatic hello
 ```

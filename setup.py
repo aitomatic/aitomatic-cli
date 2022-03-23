@@ -15,7 +15,6 @@ setup(
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url = 'https://github.com/aitomatic/aitomatic-cli',
-    py_modules = ['aitomatic', 'app'],
     packages = find_packages(),
     install_requires = [requirements],
     python_requires='>=3.7',
@@ -26,6 +25,6 @@ setup(
     ],
     entry_points = '''
         [console_scripts]
-        aitomatic=aitomatic:aitomatic_cli
+        aitomatic=src.aitomatic:aitomatic_cli
     '''
 )
