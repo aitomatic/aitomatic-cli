@@ -2,17 +2,16 @@ import click
 from src.app.deploy import deploy
 
 
-@click.group()
+@click.group(help='''
+    Aitomatic CLI tool to help manage aitomatic projects and apps
+''')
 def aitomatic_cli():
     pass
 
 
-@aitomatic_cli.command()
-def hello():
-    click.echo('Welcome to Aitomatic CLI!')
-
-
-@aitomatic_cli.group()
+@aitomatic_cli.group(help='''
+    CLI sub-command to help manage aitomatic apps
+''')
 def app():
     pass
 

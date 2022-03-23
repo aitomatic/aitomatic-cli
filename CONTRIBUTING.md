@@ -36,7 +36,7 @@ black -S .
 ```
 2. Run command to test script
 ```shell
-python src/aitomatic.py hello
+python src/aitomatic.py
 ```
 
 ## Steps to install the CLI to virtual environment and test it
@@ -49,9 +49,9 @@ pip install -e .
 ```shell
 which aitomatic
 ```
-3. Run `aitomatic hello` command
+3. Run `aitomatic` command
 ```shell
-aitomatic hello
+aitomatic
 ```
 
 ## Steps to package and distribute CLI to PyPI
