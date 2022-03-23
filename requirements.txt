@@ -1,0 +1,1 @@
+click >= 8.0.4 # library to create CLI
