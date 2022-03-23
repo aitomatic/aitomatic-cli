@@ -79,11 +79,11 @@ You will be prompted for a username and password. For the username, use __token_
 deactivate
 virtualenv .venv-test -p python3
 source .venv-test/bin/activate
-pip install --index-url https://test.pypi.org/simple/ aitomatic-cli
+pip install -i https://test.pypi.org/simple/ aitomatic-cli
 ```
 
 ## Steps to package and distribute CLI to PyPI
 
 Similar to steps to distribute to TestPyPI, except:
 - Don't need to specify `--repository` when running twine command
-- Don't need to specify `--index-url` when running pip install command
+- Don't need to specify `-i` when running pip install command
