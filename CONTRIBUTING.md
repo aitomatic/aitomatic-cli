@@ -62,6 +62,7 @@ pip install build twine
 ```
 2. Run `build` command as the root folder, where file `pyproject.toml` is located
 ```shell
+rm -rf dist
 python -m build
 ```
 After that command, we will have `tar.gz` and `.whl` files in `dist` folder
