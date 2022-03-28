@@ -1,5 +1,5 @@
 import click
-from src.app.deploy import deploy
+from src.app.cli import app
 
 
 @click.group(help='''
@@ -8,14 +8,7 @@ from src.app.deploy import deploy
 def cli():
     pass
 
-
-@cli.group(help='''
-    CLI sub-command to help manage aitomatic apps
-''')
-def app():
-    pass
-
-app.add_command(deploy)
+cli.add_command(app)
 
 if __name__ == '__main__':
     cli()
