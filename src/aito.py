@@ -14,11 +14,13 @@ def load_config():
 
 AUTH_INFO = load_config()
 
-@click.group(help='''
+@click.group(
+    help='''
     Aitomatic CLI tool to help manage aitomatic projects and apps
 ''', context_settings={'obj': AUTH_INFO})
 def cli():
     pass
+
 
 cli.add_command(login)
 cli.add_command(app)

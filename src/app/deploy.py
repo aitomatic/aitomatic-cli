@@ -2,6 +2,7 @@ import click
 from src.login.cli import authenticated
 
 
+
 @click.command()
 @authenticated
 def deploy():
