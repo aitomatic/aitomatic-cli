@@ -20,8 +20,9 @@ AUTH_INFO = load_config()
 def cli():
     pass
 
-cli.add_command(app)
 cli.add_command(login)
+cli.add_command(app)
+
 
 if __name__ == '__main__':
     cli()
