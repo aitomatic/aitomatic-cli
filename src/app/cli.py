@@ -2,13 +2,9 @@ import click
 from src.app.deploy import deploy
 
 
-@click.group(
-    help='''
-    CLI sub-command to help manage aitomatic apps
-'''
-)
+@click.group()
 def app():
-    pass
+    '''CLI sub-command to help manage aitomatic apps'''
 
 
 app.add_command(deploy)

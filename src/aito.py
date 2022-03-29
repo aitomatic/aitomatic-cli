@@ -19,7 +19,7 @@ AUTH_INFO = load_config()
     Aitomatic CLI tool to help manage aitomatic projects and apps
 ''', context_settings={'obj': AUTH_INFO})
 def cli():
-    pass
+    '''Aitomatic CLI tool to help manage aitomatic projects and apps'''
 
 
 cli.add_command(login)
