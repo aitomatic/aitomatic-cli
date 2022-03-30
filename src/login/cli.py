@@ -113,7 +113,7 @@ def save_config(data):
 def authenticated(f):
     @click.pass_obj
     def wrapper(obj, *args, **kwargs):
-        token = obj.get("at")
+        token = obj and obj.get("at")
 
         if token is None:
             prompt_login()
