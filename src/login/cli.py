@@ -16,7 +16,7 @@ CONFIG_FILE = Path.home().joinpath('.aitomatic')
 ''')
 @click.pass_obj
 def login(obj):
-    if (obj is not None and obj.get("at") is not None) or CONFIG_FILE.exists():
+    if obj.get("at") is not None or CONFIG_FILE.exists():
         relogin = click.confirm("You're logged in. Do you want to log in again?", default=False, abort=False, prompt_suffix=': ', show_default=True, err=False)
 
         if not relogin:
@@ -25,10 +25,10 @@ def login(obj):
     do_login()
 
 def do_login():
-    click.echo('Login to Aitomatic cloud')
+    click.echo('Logging into Aitomatic cloud...')
     device_info = request_device_code()
     display_device_info(device_info)
-    polling_authentication(device_info)
+    poll_authentication_status(device_info)
 
 def request_device_code():
     res = requests.post(
@@ -55,7 +55,7 @@ def display_device_info(device_info):
     url = device_info['verification_uri_complete']
 
     click.echo("""
-    Please visit the following URL:
+    Please visit:
     {}
     to login to Aitomatic cloud.
 
@@ -67,7 +67,7 @@ def display_device_info(device_info):
     click.echo("Waiting for authentication...")
 
 @click.pass_obj
-def polling_authentication(obj, device_info):
+def poll_authentication_status(obj, device_info):
     res = requests.post(
         url="https://{}/oauth/token".format(ORG),
         data={
@@ -87,7 +87,7 @@ def polling_authentication(obj, device_info):
 
     if polling_data.get('error') == 'authorization_pending':
         time.sleep(device_info['interval'])
-        polling_authentication(device_info)
+        poll_authentication_status(device_info)
 
     if polling_data.get('error') == 'expired_token' or polling_data.get('error') == 'access_denied':
         click.echo(polling_data['error_description'])
