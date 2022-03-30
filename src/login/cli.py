@@ -94,12 +94,14 @@ def poll_authentication_status(obj, device_info):
         exit(1)
 
     if polling_data.get('access_token') is not None:
-        obj['at'] = polling_data['access_token']
-        obj['rt'] = polling_data['refresh_token']
         save_config({ 'at': polling_data['access_token'], 'rt': polling_data['refresh_token'], 'id': polling_data['id_token'] })
         click.echo("Login successful!")
 
-def save_config(data):
+@click.pass_obj
+def save_config(obj, data):
+    obj['at'] = data['at']
+    obj['rt'] = data['rt']
+    obj['id'] = data['id']
     CONFIG_FILE.write_text(json.dumps(data))
 
 def authenticated(f):
