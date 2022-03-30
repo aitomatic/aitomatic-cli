@@ -1,2 +1,2 @@
 click >= 8.0.4 # library to create CLI
-request >= 2.27.1
+requests >= 2.27.1
