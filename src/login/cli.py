@@ -15,7 +15,7 @@ def load_config():
     if CONFIG_FILE.exists():
         return json.loads(CONFIG_FILE.read_text())
     else:
-        return None
+        return {}
 
 AUTH_INFO = load_config()
 
