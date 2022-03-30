@@ -24,7 +24,7 @@ AUTH_INFO = load_config()
 ''')
 @click.pass_obj
 def login(obj):
-    if obj.get("at") is not None or CONFIG_FILE.exists():
+    if (obj is not None and obj.get("at") is not None) or CONFIG_FILE.exists():
         relogin = click.confirm("You're logged in. Do you want to log in again?", default=False, abort=False, prompt_suffix=': ', show_default=True, err=False)
 
         if not relogin:
