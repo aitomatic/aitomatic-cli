@@ -125,5 +125,5 @@ def authenticated(f):
     return update_wrapper(wrapper, f)
 
 def prompt_login():
-    click.echo("You're not logged in. Please run `aitomatic login` first.")
+    click.echo("You're not logged in. Please run `aito login` first.")
     
