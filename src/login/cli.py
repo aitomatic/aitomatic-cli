@@ -102,8 +102,8 @@ def polling_authentication(obj, device_info):
         exit(1)
 
     if polling_data.get('access_token') is not None:
-        obj['access_token'] = polling_data['access_token']
-        obj['refresh_token'] = polling_data['refresh_token']
+        obj['at'] = polling_data['access_token']
+        obj['rt'] = polling_data['refresh_token']
         save_config({ 'at': polling_data['access_token'], 'rt': polling_data['refresh_token'], 'id': polling_data['id_token'] })
         click.echo("Login successful!")
 
