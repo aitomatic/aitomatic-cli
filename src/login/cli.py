@@ -3,6 +3,7 @@ import requests
 import time
 import json
 from pathlib import Path
+from functools import update_wrapper
 
 ORG = 'aitomaticinc.us.auth0.com';
 CLIENT_ID = "zk9AB0KtNqJY0gVeF1p0ZmUb2tlcXpYq"
@@ -109,13 +110,28 @@ def polling_authentication(obj, device_info):
 def save_config(data):
     CONFIG_FILE.write_text(json.dumps(data))
 
-def verify_token(token):
-    res = requests.get(
-        url="https://{}/oauth/device/code".format(ORG),
-        headers={ "Authorization": "Bearer {}".format(token) }
-    )
+def authenticated(f):
+    @click.pass_obj
+    def wrapper(obj, *args, **kwargs):
+        token = obj.get("at")
 
-    if (res.status_code == 200):
-        return True
+        if token is None:
+            prompt_login()
+            exit(1)
 
-    return False
+        res = requests.get(
+            url="https://{}/userinfo".format(ORG),
+            headers={ "Authorization": "Bearer {}".format(token) }
+        )
+
+        if (res.status_code == 200):
+            f(*args, **kwargs)
+        else:
+            prompt_login()
+            exit(1)
+
+    return update_wrapper(wrapper, f)
+
+def prompt_login():
+    click.echo("You're not logged in. Please run `aitomatic login` first.")
+    
