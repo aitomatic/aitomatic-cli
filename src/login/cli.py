@@ -11,14 +11,6 @@ AUDIENCE = "https://apps.aitomatic.com/dev"
 SCOPE = "openid profile email offline_access"
 CONFIG_FILE = Path.home().joinpath('.aitomatic')
 
-def load_config():
-    if CONFIG_FILE.exists():
-        return json.loads(CONFIG_FILE.read_text())
-    else:
-        return {}
-
-AUTH_INFO = load_config()
-
 @click.command(help='''
     Login to Aitomatic cloud
 ''')
