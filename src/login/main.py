@@ -9,14 +9,14 @@ ORG = 'aitomaticinc.us.auth0.com'
 CLIENT_ID = "zk9AB0KtNqJY0gVeF1p0ZmUb2tlcXpYq"
 AUDIENCE = "https://apps.aitomatic.com/dev"
 SCOPE = "openid profile email offline_access"
-CONFIG_FILE = Path.home().joinpath('.aitomatic')
+CREDENTIAL_FILE = Path.home().joinpath('.aitomatic/credentials')
 
 
 @click.command()
 @click.pass_obj
 def login(obj):
     '''Login to Aitomatic cloud'''
-    if obj.get("access_token") is not None or CONFIG_FILE.exists():
+    if obj.get("access_token") is not None or CREDENTIAL_FILE.exists():
         re_login = click.confirm(
             "You're logged in. Do you want to log in again?",
             default=False,
@@ -111,7 +111,7 @@ def poll_authentication_status(obj, device_info):
         exit(1)
 
     if polling_data.get('access_token') is not None:
-        save_config(
+        save_credential(
             {
                 'access_token': polling_data['access_token'],
                 'refresh_token': polling_data['refresh_token'],
@@ -122,11 +122,13 @@ def poll_authentication_status(obj, device_info):
 
 
 @click.pass_obj
-def save_config(obj, data):
+def save_credential(obj, data):
     obj['access_token'] = data['access_token']
     obj['refresh_token'] = data['refresh_token']
     obj['id'] = data['id']
-    CONFIG_FILE.write_text(json.dumps(data))
+    if not CREDENTIAL_FILE.exists():
+        CREDENTIAL_FILE.parent.mkdir(parents=True)
+    CREDENTIAL_FILE.write_text(json.dumps(data))
 
 
 def authenticated(f):

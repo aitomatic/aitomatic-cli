@@ -4,12 +4,12 @@ from pathlib import Path
 from src.app.main import app
 from src.login.main import login
 
-CONFIG_FILE = Path.home().joinpath('.aitomatic')
+CREDENTIAL_FILE = Path.home().joinpath('.aitomatic/credentials')
 
 
 def load_config():
-    if CONFIG_FILE.exists():
-        return json.loads(CONFIG_FILE.read_text())
+    if CREDENTIAL_FILE.exists():
+        return json.loads(CREDENTIAL_FILE.read_text())
     else:
         return {}
 
