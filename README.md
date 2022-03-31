@@ -25,4 +25,9 @@ Both the above commands would install the package globally and `aito` will be av
 
 ## How to use
 
+- `aito login`: Login to Aitomatic account 
+- `aito app deploy`: Deploy app to Aitomatic cloud
+
 ## Feedback
+
+In order to report issues, please open one in https://github.com/aitomatic/aitomatic-cli/issues
