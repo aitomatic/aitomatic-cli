@@ -16,7 +16,7 @@ CONFIG_FILE = Path.home().joinpath('.aitomatic')
 @click.pass_obj
 def login(obj):
     '''Login to Aitomatic cloud'''
-    if obj.get("at") is not None or CONFIG_FILE.exists():
+    if obj.get("access_token") is not None or CONFIG_FILE.exists():
         re_login = click.confirm(
             "You're logged in. Do you want to log in again?",
             default=False,
@@ -77,7 +77,6 @@ def display_device_info(device_info):
     )
 
     click.launch(url)
-
     click.echo("Waiting for authentication...")
 
 
@@ -114,8 +113,8 @@ def poll_authentication_status(obj, device_info):
     if polling_data.get('access_token') is not None:
         save_config(
             {
-                'at': polling_data['access_token'],
-                'rt': polling_data['refresh_token'],
+                'access_token': polling_data['access_token'],
+                'refresh_token': polling_data['refresh_token'],
                 'id': polling_data['id_token'],
             }
         )
@@ -124,8 +123,8 @@ def poll_authentication_status(obj, device_info):
 
 @click.pass_obj
 def save_config(obj, data):
-    obj['at'] = data['at']
-    obj['rt'] = data['rt']
+    obj['access_token'] = data['access_token']
+    obj['refresh_token'] = data['refresh_token']
     obj['id'] = data['id']
     CONFIG_FILE.write_text(json.dumps(data))
 
@@ -133,7 +132,7 @@ def save_config(obj, data):
 def authenticated(f):
     @click.pass_obj
     def wrapper(obj, *args, **kwargs):
-        token = obj and obj.get("at")
+        token = obj and obj.get("access_token")
 
         if token is None:
             prompt_login()
