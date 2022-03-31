@@ -1,10 +1,11 @@
 import click
 import json
 from pathlib import Path
-from src.app.cli import app
-from src.login.cli import login
+from src.app.main import app
+from src.login.main import login
 
 CONFIG_FILE = Path.home().joinpath('.aitomatic')
+
 
 def load_config():
     if CONFIG_FILE.exists():
@@ -12,12 +13,13 @@ def load_config():
     else:
         return {}
 
+
 AUTH_INFO = load_config()
 
+
 @click.group(
-    help='''
-    Aitomatic CLI tool to help manage aitomatic projects and apps
-''', context_settings={'obj': AUTH_INFO})
+    context_settings={'obj': AUTH_INFO},
+)
 def cli():
     '''Aitomatic CLI tool to help manage aitomatic projects and apps'''
 

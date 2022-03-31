@@ -1,6 +1,5 @@
 import click
-from src.login.cli import authenticated
-
+from src.login.main import authenticated
 
 
 @click.command()
