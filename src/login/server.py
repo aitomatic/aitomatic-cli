@@ -1,6 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
-import requests
 
 
 class LoginServer(BaseHTTPRequestHandler):
@@ -12,8 +11,8 @@ class LoginServer(BaseHTTPRequestHandler):
     def do_GET(self):
         o = urlparse(self.path)
         params = parse_qs(o.query)
-        print("Params", params)
-        print("User Object", self.obj)
+        # print("Params", params)
+        # print("User Object", self.obj)
 
         code = params.get("code")
         state = params.get("state")
@@ -32,6 +31,10 @@ class LoginServer(BaseHTTPRequestHandler):
             print("Error: " + params.get("error_description")[0])
             exit(1)
 
-    # bypass server log messages
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+
+    # bypass server access log, do not remove
     def log_message(self, format, *args):
         return

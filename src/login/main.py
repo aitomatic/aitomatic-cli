@@ -57,20 +57,10 @@ def setup_server(obj, exchange_code, hostName, serverPort):
         exit(0)
 
 
-# def find_free_port():
-#     s = socket.socket()
-#     s.bind(("", 0))
-#     port = s.getsockname()[1]
-#     s.close()
-
-#     return port
-
-
 @click.pass_obj
 def start_server(obj):
     service = None
-    message_queue = Queue()
-    print("Starting server", obj, message_queue)
+    message_queue = Queue()  # share state between processes
     obj["message_queue"] = message_queue
 
     try:
@@ -99,16 +89,14 @@ def do_login(obj):
     obj["code_verifier"] = code_verifier
     obj["login_seed"] = get_random_string(50)
 
+    # start server to handle login callback from auth0
     start_server()
 
+    # start the authentication flow
     initiate_login_flow()
-    wait_for_login_callback()
 
-    # await asyncio.sleep(0.1)  # time for the server to start
-    # click.echo("Logging into Aitomatic cloud...")
-    # device_info = request_device_code()
-    # display_device_info(device_info)
-    # poll_authentication_status(device_info)
+    # wait for the login callback
+    wait_for_login_callback()
 
 
 @click.pass_obj
@@ -160,8 +148,8 @@ def wait_for_login_callback(obj):
                 save_credential(
                     {
                         "access_token": polling_data["access_token"],
-                        "refresh_token": polling_data["refresh_token"],
-                        "id": polling_data["id_token"],
+                        "refresh_token": polling_data.get("refresh_token", ""),
+                        "id": polling_data.get("id_token", ""),
                     }
                 )
                 click.echo("Login successful")
