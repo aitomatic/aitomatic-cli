@@ -35,6 +35,13 @@ class LoginServer(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
 
+        self.wfile.write(
+            bytes(
+                '{ "status": "Authentication code accquired. You can close this browser window and return to terminal" }',
+                "utf-8",
+            )
+        )
+
     # bypass server access log, do not remove
     def log_message(self, format, *args):
         return
