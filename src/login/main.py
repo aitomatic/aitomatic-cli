@@ -1,20 +1,14 @@
 import click
 import requests
 from multiprocessing import Process, Queue
-from ctypes import c_wchar_p
 from http.server import HTTPServer
-from os import urandom
-from base64 import urlsafe_b64encode
-from hashlib import sha256
-from re import sub
 import time
 import json
-import random
-import string
 from pathlib import Path
 from functools import update_wrapper, partial
 
 from .server import LoginServer
+from src.utils import get_random_string, create_code_challenger, create_code_verifier
 
 ORG = "aitomaticinc.us.auth0.com"
 CLIENT_ID = "zk9AB0KtNqJY0gVeF1p0ZmUb2tlcXpYq"
@@ -44,17 +38,22 @@ def login(obj):
     do_login()
 
 
-# set up webserver to handle login callback from auth0
-def setup_server(obj, exchange_code, hostName, serverPort):
-    handler = partial(LoginServer, obj, exchange_code)
-    webServer = HTTPServer((hostName, serverPort), handler)
+@click.pass_obj
+def do_login(obj):
+    code_verifier = create_code_verifier()
+    code_challenge = create_code_challenger(code_verifier)
+    obj["code_challenge"] = code_challenge
+    obj["code_verifier"] = code_verifier
+    obj["login_seed"] = get_random_string(50)
 
-    try:
-        webServer.serve_forever()
-        return webServer
-    except KeyboardInterrupt:
-        webServer.server_close()
-        exit(0)
+    # start server to handle login callback from auth0
+    start_server()
+
+    # start the authentication flow
+    initiate_login_flow()
+
+    # wait for the login callback
+    wait_for_login_callback()
 
 
 @click.pass_obj
@@ -81,22 +80,17 @@ def start_server(obj):
         exit(0)
 
 
-@click.pass_obj
-def do_login(obj):
-    code_verifier = create_code_verifier()
-    code_challenge = create_code_challenger(code_verifier)
-    obj["code_challenge"] = code_challenge
-    obj["code_verifier"] = code_verifier
-    obj["login_seed"] = get_random_string(50)
+# set up webserver to handle login callback from auth0
+def setup_server(obj, exchange_code, hostName, serverPort):
+    handler = partial(LoginServer, obj, exchange_code)
+    webServer = HTTPServer((hostName, serverPort), handler)
 
-    # start server to handle login callback from auth0
-    start_server()
-
-    # start the authentication flow
-    initiate_login_flow()
-
-    # wait for the login callback
-    wait_for_login_callback()
+    try:
+        webServer.serve_forever()
+        return webServer
+    except KeyboardInterrupt:
+        webServer.server_close()
+        exit(0)
 
 
 @click.pass_obj
@@ -198,22 +192,3 @@ def authenticated(f):
 
 def prompt_login():
     click.echo("You're not logged in. Please run `aito login` first.")
-
-
-def get_random_string(length):
-    letters = string.ascii_lowercase
-    return "".join(random.choice(letters) for i in range(length))
-
-
-def create_code_verifier():
-    code_verifier = urlsafe_b64encode(urandom(40)).decode("utf-8")
-    code_verifier = sub("[^a-zA-Z0-9]+", "", code_verifier)
-
-    return code_verifier
-
-
-def create_code_challenger(code_verifier):
-    code_challenge = sha256(code_verifier.encode("utf-8")).digest()
-    code_challenge = urlsafe_b64encode(code_challenge).decode("utf-8")
-    code_challenge = code_challenge.replace("=", "")
-    return code_challenge
