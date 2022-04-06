@@ -16,15 +16,15 @@ AUTH_INFO = load_config()
 
 
 @click.group(
-    context_settings={"obj": AUTH_INFO},
+    context_settings={'obj': AUTH_INFO},
 )
 def cli():
-    """Aitomatic CLI tool to help manage aitomatic projects and apps"""
+    '''Aitomatic CLI tool to help manage aitomatic projects and apps'''
 
 
 cli.add_command(login)
 cli.add_command(app)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cli()
