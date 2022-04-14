@@ -163,7 +163,7 @@ def save_credential(obj, data):
     obj['refresh_token'] = data['refresh_token']
     obj['id'] = data['id']
     if not CREDENTIAL_FILE.exists():
-        CREDENTIAL_FILE.parent.mkdir(parents=True)
+        CREDENTIAL_FILE.parent.mkdir(parents=True, exist_ok=True)
     CREDENTIAL_FILE.write_text(json.dumps(data))
 
 
