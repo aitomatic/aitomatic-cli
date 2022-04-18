@@ -31,3 +31,18 @@ Both the above commands would install the package globally and `aito` will be av
 ## Feedback
 
 In order to report issues, please open one in https://github.com/aitomatic/aitomatic-cli/issues
+
+
+Temporary: If the deploy command failed due to change is service api. Update api base:
+
+1. Clone https://github.com/aitomatic/ai-cloud
+2. Follow instruction and select dev stack
+3. Get the service host name
+```
+pulumi stack select dev
+pulumi stack output kodaServiceHostname
+```
+4. Set AI_CLI_API_BASE env var to 
+```
+export AI_CLI_API_BASE = "http://" + <hostname from step 3>
+```
