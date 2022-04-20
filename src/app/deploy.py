@@ -1,4 +1,3 @@
-import json
 import click
 from src.login.main import authenticated
 from src.api.aitomatic import AiCloudApi
