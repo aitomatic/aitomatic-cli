@@ -36,7 +36,7 @@ black -S .
 ```
 2. Run command to test script
 ```shell
-python src/cli.py
+python src/aito.py
 ```
 
 ## Steps to install the CLI to virtual environment and test it
@@ -88,3 +88,17 @@ pip install -i https://test.pypi.org/simple/ aitomatic-cli
 Similar to steps to distribute to TestPyPI, except:
 - Don't need to specify `--repository` when running twine command
 - Don't need to specify `-i` when running pip install command
+
+## Temporary: If the deploy command failed due to change in service api. Update api base:
+
+1. Clone https://github.com/aitomatic/ai-cloud
+2. Follow instruction and select dev stack
+3. Get the service host name
+```shell
+pulumi stack select dev
+pulumi stack output kodaServiceHostname
+```
+4. Set AI_CLI_API_BASE env var to 
+```shell
+export AI_CLI_API_BASE = "http://" + <hostname from step 3>
+```
