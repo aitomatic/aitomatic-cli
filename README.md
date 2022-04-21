@@ -12,7 +12,7 @@ The Command Line Interface (CLI) to create a project, build an image or deploy a
 To install this CLI tool you can run the below command
 
 ```shell
-pip3 install aitomatic-cli
+pip3 install aitomatic
 ```
 
 Alternatively, you clone this repo and then run this command from within the repository folder
