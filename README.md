@@ -27,7 +27,7 @@ Both the above commands would install the package globally and `aito` will be av
 
 - `aito login`: Login to Aitomatic cloud 
 - `aito app deploy`: Deploy app to Aitomatic cluster
-- `aito app execute`: Execute app in Aitomatic cluster
+- `aito app execute <app_name>`: Execute app in Aitomatic cluster
 
 ## Feedback
 
