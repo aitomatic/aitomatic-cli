@@ -184,6 +184,7 @@ def authenticated(f):
         if res.status_code == 200:
             f(*args, **kwargs)
         else:
+            click.echo(res.text)
             prompt_login()
             exit(1)
 

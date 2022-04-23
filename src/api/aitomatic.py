@@ -21,3 +21,15 @@ class AiCloudApi:
         )
 
         return res
+
+    def execute(self, app_id, data):
+        res = requests.post(
+            url=f"{self.API_BASE}/app/{app_id}/execute",
+            data=data,
+            headers={
+                'content-type': 'application/x-www-form-urlencoded',
+                'Authorization': f'Bearer {self.token}',
+            },
+        )
+
+        return res        

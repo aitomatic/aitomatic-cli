@@ -12,7 +12,7 @@ The Command Line Interface (CLI) to create a project, build an image or deploy a
 To install this CLI tool you can run the below command
 
 ```shell
-pip3 install aitomatic-cli
+pip3 install aitomatic
 ```
 
 Alternatively, you clone this repo and then run this command from within the repository folder
@@ -25,8 +25,9 @@ Both the above commands would install the package globally and `aito` will be av
 
 ## How to use
 
-- `aito login`: Login to Aitomatic account 
-- `aito app deploy`: Deploy app to Aitomatic cloud
+- `aito login`: Login to Aitomatic cloud 
+- `aito app deploy`: Deploy app to Aitomatic cluster
+- `aito app execute <app_name>`: Execute app in Aitomatic cluster
 
 ## Feedback
 

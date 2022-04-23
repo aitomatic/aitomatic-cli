@@ -80,7 +80,7 @@ You will be prompted for a username and password. For the username, use __token_
 deactivate
 virtualenv .venv-test -p python3
 source .venv-test/bin/activate
-pip install -i https://test.pypi.org/simple/ aitomatic-cli
+pip install -i https://test.pypi.org/simple/ aitomatic
 ```
 
 ## Steps to package and distribute CLI to PyPI
