@@ -1,6 +1,5 @@
 import click
 import json
-from pathlib import Path
 from src.execute.main import execute
 from src.deploy.main import deploy
 from src.login.main import login, CREDENTIAL_FILE

@@ -10,10 +10,10 @@ from src.api.aitomatic import AiCloudApi
 def app(obj, app_name):
     '''Deploy app to Aitomatic cluster'''
 
-    click.echo('Deploy app to Aitomatic...')
+    click.echo(f'Deploying app {app_name} to Aitomatic...')
 
     api = AiCloudApi(token=obj.get("access_token"))
-    res = api.deploy(app_id=app_name, data={"foo": "bar"})
+    res = api.deploy(app_name=app_name, data={"foo": "bar"})
 
     data = res.json()
 

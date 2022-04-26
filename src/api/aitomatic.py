@@ -10,9 +10,9 @@ class AiCloudApi:
             'http://a1adce51c15d34971924a8c7bb9feafd-904302004.us-west-2.elb.amazonaws.com',
         )
 
-    def deploy(self, app_id, data):
+    def deploy(self, app_name, data):
         res = requests.post(
-            url=f"{self.API_BASE}/app/{app_id}/deploy",
+            url=f"{self.API_BASE}/app/{app_name}/deploy",
             data=data,
             headers={
                 'content-type': 'application/x-www-form-urlencoded',
@@ -22,9 +22,9 @@ class AiCloudApi:
 
         return res
 
-    def execute(self, app_id, data):
+    def execute(self, app_name, data):
         res = requests.post(
-            url=f"{self.API_BASE}/app/{app_id}/execute",
+            url=f"{self.API_BASE}/app/{app_name}/execute",
             data=data,
             headers={
                 'content-type': 'application/x-www-form-urlencoded',
