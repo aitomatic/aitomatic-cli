@@ -7,13 +7,13 @@ from src.api.aitomatic import AiCloudApi
 @click.argument('app_name', type=str)
 @click.pass_obj
 @authenticated
-def execute(obj, app_name):
-    '''Execute app in Aitomatic cluster'''
+def app(obj, app_name):
+    '''Execute an app deployed in Aitomatic cluster'''
 
-    click.echo(f'Execute {app_name} app in Aitomatic...')
+    click.echo(f'Executing app {app_name} in Aitomatic...')
 
     api = AiCloudApi(token=obj.get("access_token"))
-    res = api.execute(app_id=app_name, data={"foo": "bar"})
+    res = api.execute(app_name=app_name, data={"foo": "bar"})
 
     data = res.json()
     if data['status'] == 'OK':
