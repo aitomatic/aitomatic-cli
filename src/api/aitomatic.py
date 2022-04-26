@@ -32,4 +32,4 @@ class AiCloudApi:
             },
         )
 
-        return res        
+        return res

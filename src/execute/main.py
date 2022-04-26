@@ -6,4 +6,5 @@ from src.execute.app import app
 def execute():
     '''Execute app/project deployed in Aitomatic cluster'''
 
+
 execute.add_command(app)
