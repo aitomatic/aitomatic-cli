@@ -2,6 +2,7 @@ import click
 import json
 from pathlib import Path
 from src.app.main import app
+from src.execute.main import execute
 from src.login.main import login, CREDENTIAL_FILE
 
 
@@ -24,6 +25,7 @@ def cli():
 
 cli.add_command(login)
 cli.add_command(app)
+cli.add_command(execute)
 
 
 if __name__ == '__main__':
