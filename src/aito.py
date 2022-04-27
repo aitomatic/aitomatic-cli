@@ -2,7 +2,9 @@ import click
 import json
 from src.execute.main import execute
 from src.deploy.main import deploy
-from src.login.main import login, CREDENTIAL_FILE
+from src.login.main import login
+from src.logout.main import logout
+from src.constants import CREDENTIAL_FILE
 
 
 def load_config():
@@ -23,6 +25,7 @@ def cli():
 
 
 cli.add_command(login)
+cli.add_command(logout)
 cli.add_command(execute)
 cli.add_command(deploy)
 
