@@ -7,7 +7,7 @@ class AiCloudApi:
         self.token = token
         self.API_BASE = os.getenv(
             'AI_CLI_API_BASE',
-            'http://a1adce51c15d34971924a8c7bb9feafd-904302004.us-west-2.elb.amazonaws.com',
+            'http://a20ae33fe805a4d24bef115a973c630a-434493144.us-west-2.elb.amazonaws.com',
         )
 
     def deploy(self, app_name, data):
