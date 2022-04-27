@@ -4,17 +4,16 @@ from multiprocessing import Process, Queue
 from http.server import HTTPServer
 import time
 import json
-from pathlib import Path
 from functools import update_wrapper, partial
 
 from .server import LoginServer
 from src.utils import get_random_string, create_code_challenger, create_code_verifier
+from src.constants import CREDENTIAL_FILE
 
 ORG = 'aitomaticinc.us.auth0.com'
 CLIENT_ID = 'zk9AB0KtNqJY0gVeF1p0ZmUb2tlcXpYq'
 AUDIENCE = 'https://apps.aitomatic.com/dev'
 SCOPE = 'openid profile email offline_access'
-CREDENTIAL_FILE = Path.home().joinpath('.aitomatic/credentials')
 PORT = 56921
 
 
