@@ -145,7 +145,7 @@ def wait_for_login_callback(obj):
                         'id': polling_data.get('id_token', ''),
                     }
                 )
-                click.echo('Login successful')
+                click.echo('Login successfully')
                 exit(0)
             return
 
@@ -169,11 +169,10 @@ def save_credential(obj, data):
 def authenticated(f):
     @click.pass_obj
     def wrapper(obj, *args, **kwargs):
-        token = obj and obj.get('access_token')
+        token = obj.get('access_token')
 
-        if token is None:
+        if token is None or len(token) == 0:
             prompt_login()
-            exit(1)
 
         res = requests.get(
             url='https://{}/userinfo'.format(ORG),
@@ -182,13 +181,51 @@ def authenticated(f):
 
         if res.status_code == 200:
             f(*args, **kwargs)
+        elif res.status_code == 401:
+            click.echo(
+                'Your token is expired. Please try again after refreshing it'
+            )
+            refresh_token()
         else:
-            click.echo(res.text)
             prompt_login()
-            exit(1)
 
     return update_wrapper(wrapper, f)
 
 
 def prompt_login():
     click.echo("You're not logged in. Please run `aito login` first.")
+    exit(1)
+
+
+@click.pass_obj
+def refresh_token(obj):
+    token = obj.get('refresh_token')
+
+    if token is None or len(token) == 0:
+        click.echo("You can't refresh token. Please login again.")
+        exit(1)
+
+    click.echo('Refreshing token...')
+    res = requests.post(
+        url='https://{}/oauth/token'.format(ORG),
+        data={
+            'client_id': CLIENT_ID,
+            'grant_type': 'refresh_token',
+            'refresh_token': obj['refresh_token'],
+        },
+        headers={'content-type': 'application/x-www-form-urlencoded'},
+    )
+    if res.status_code == 200:
+        data = res.json()
+        save_credential(
+            {
+                'access_token': data['access_token'],
+                'refresh_token': token,
+                'id': data.get('id_token', ''),
+            }
+        )
+        click.echo('Refresh token successfully')
+        exit(0)
+    else:
+        click.echo('Refresh token failed. Please try again.')
+        exit(1)
