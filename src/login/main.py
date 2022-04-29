@@ -183,10 +183,8 @@ def authenticated(f):
         if res.status_code == 200:
             f(*args, **kwargs)
         elif res.status_code == 401:
-            click.echo(
-                'Your token is expired. Please try again after refreshing it'
-            )
             refresh_token()
+            f(*args, **kwargs)
         else:
             prompt_login()
 
@@ -203,10 +201,8 @@ def refresh_token(obj):
     token = obj.get('refresh_token')
 
     if token is None or len(token) == 0:
-        click.echo("You can't refresh token. Please login again.")
-        exit(1)
+        prompt_login()
 
-    click.echo('Refreshing token...')
     res = requests.post(
         url='https://{}/oauth/token'.format(ORG),
         data={
@@ -225,8 +221,5 @@ def refresh_token(obj):
                 'id': data.get('id_token', ''),
             }
         )
-        click.echo('Refresh token successfully')
-        exit(0)
     else:
-        click.echo('Refresh token failed. Please try again.')
-        exit(1)
+        prompt_login()
