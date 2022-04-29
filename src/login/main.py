@@ -9,6 +9,7 @@ from functools import update_wrapper, partial
 from .server import LoginServer
 from src.utils import get_random_string, create_code_challenger, create_code_verifier
 from src.constants import CREDENTIAL_FILE
+from src.logout.main import remove_local_credential_file
 
 ORG = 'aitomaticinc.us.auth0.com'
 CLIENT_ID = 'zk9AB0KtNqJY0gVeF1p0ZmUb2tlcXpYq'
@@ -21,7 +22,7 @@ PORT = 56921
 @click.pass_obj
 def login(obj):
     '''Login to Aitomatic cloud'''
-    if obj.get('access_token') is not None or CREDENTIAL_FILE.exists():
+    if CREDENTIAL_FILE.exists():
         re_login = click.confirm(
             "You're logged in. Do you want to log in again?",
             default=False,
@@ -193,6 +194,7 @@ def authenticated(f):
 
 def prompt_login():
     click.echo("You're not logged in. Please run `aito login` first.")
+    remove_local_credential_file()
     exit(1)
 
 
