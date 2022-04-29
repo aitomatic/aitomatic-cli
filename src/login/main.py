@@ -107,6 +107,7 @@ def initiate_login_flow(obj):
         f'&scope={SCOPE}'
         f'&audience={AUDIENCE}'
         f'&state={login_seed}'
+        f'&max_age=3600'
     )
 
     click.launch(url)
@@ -145,7 +146,7 @@ def wait_for_login_callback(obj):
                         'id': polling_data.get('id_token', ''),
                     }
                 )
-                click.echo('Login successful')
+                click.echo('Login successfully')
                 exit(0)
             return
 
@@ -169,11 +170,10 @@ def save_credential(obj, data):
 def authenticated(f):
     @click.pass_obj
     def wrapper(obj, *args, **kwargs):
-        token = obj and obj.get('access_token')
+        token = obj.get('access_token')
 
-        if token is None:
+        if token is None or len(token) == 0:
             prompt_login()
-            exit(1)
 
         res = requests.get(
             url='https://{}/userinfo'.format(ORG),
@@ -182,13 +182,44 @@ def authenticated(f):
 
         if res.status_code == 200:
             f(*args, **kwargs)
+        elif res.status_code == 401:
+            refresh_token()
+            f(*args, **kwargs)
         else:
-            click.echo(res.text)
             prompt_login()
-            exit(1)
 
     return update_wrapper(wrapper, f)
 
 
 def prompt_login():
     click.echo("You're not logged in. Please run `aito login` first.")
+    exit(1)
+
+
+@click.pass_obj
+def refresh_token(obj):
+    token = obj.get('refresh_token')
+
+    if token is None or len(token) == 0:
+        prompt_login()
+
+    res = requests.post(
+        url='https://{}/oauth/token'.format(ORG),
+        data={
+            'client_id': CLIENT_ID,
+            'grant_type': 'refresh_token',
+            'refresh_token': obj['refresh_token'],
+        },
+        headers={'content-type': 'application/x-www-form-urlencoded'},
+    )
+    if res.status_code == 200:
+        data = res.json()
+        save_credential(
+            {
+                'access_token': data['access_token'],
+                'refresh_token': token,
+                'id': data.get('id_token', ''),
+            }
+        )
+    else:
+        prompt_login()
