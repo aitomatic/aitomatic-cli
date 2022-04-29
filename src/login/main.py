@@ -107,7 +107,7 @@ def initiate_login_flow(obj):
         f'&scope={SCOPE}'
         f'&audience={AUDIENCE}'
         f'&state={login_seed}'
-        f'&prompt=login'
+        f'&max_age=3600'
     )
 
     click.launch(url)
