@@ -74,7 +74,7 @@
     ```
     `--repository` used to choose upload to PyPI or TestPyPI, `--skip-existing` if we want to distribute further versions of the cli.
 
-    You will be prompted for a username and password. For the username, use __token__. For the password, use the token value, including the pypi- prefix.
+    You will be prompted for a username and password. For the username, use `__token__`. For the password, use the token value, including the pypi- prefix.
 5. Using another virtual environment and install the `aitomatic-cli` using pip to verify that it works
     ```shell
     deactivate
