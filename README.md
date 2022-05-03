@@ -5,7 +5,7 @@ The Command Line Interface (CLI) to create a project, build an image or deploy a
 ## Prerequisite
 
 1. python3
-2. pip
+2. pip3
 
 ## Installing
 
@@ -29,6 +29,7 @@ Both the above commands would install the package globally and `aito` will be av
 - `aito logout`: Logout from Aitomatic cloud 
 - `aito deploy app <app_name>`: Deploy app to Aitomatic cluster
 - `aito execute app <app_name>`: Execute app in Aitomatic cluster
+- `aito run`: Run an app using `.aito` config file
 
 ## Feedback
 
