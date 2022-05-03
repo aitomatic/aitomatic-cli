@@ -4,6 +4,7 @@ from src.execute.main import execute
 from src.deploy.main import deploy
 from src.login.main import login
 from src.logout.main import logout
+from src.run.main import run
 from src.constants import CREDENTIAL_FILE
 
 
@@ -28,6 +29,7 @@ cli.add_command(login)
 cli.add_command(logout)
 cli.add_command(execute)
 cli.add_command(deploy)
+cli.add_command(run)
 
 
 if __name__ == '__main__':
