@@ -28,20 +28,9 @@
     pip3 install -r requirements.txt
     ```
 
-## Steps to test code in local
+## Steps to install the CLI to virtual environment and run it
 
-1. Run `black` command to format code
-    ```shell
-    black -S .
-    ```
-2. Run command to test script
-    ```shell
-    python src/aito.py
-    ```
-
-## Steps to install the CLI to virtual environment and test it
-
-1. Run command to install CLI
+1. Run command to install CLI in editable mode
     ```shell
     pip3 install -e .
     ```
