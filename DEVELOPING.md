@@ -3,10 +3,10 @@
 ## Prerequisite
 
 1. python3
-2. pip
+2. pip3
 3. virtualenv
     ```shell
-    pip install virtualenv
+    pip3 install virtualenv
     ```
 
 ## Steps to setup dev environment
@@ -21,11 +21,11 @@
     ```
 3. Install `setuptools` to package code and `black` to format python code
     ```shell
-    pip install setuptools black
+    pip3 install setuptools black
     ```
 4. Install libraries in file requirements.txt
     ```shell
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     ```
 
 ## Steps to test code in local
@@ -43,7 +43,7 @@
 
 1. Run command to install CLI
     ```shell
-    pip install -e .
+    pip3 install -e .
     ```
 2. Verify the CLI
     ```shell
@@ -58,12 +58,12 @@
 
 1. Install `build` to generate distribution packages and `twine` to distribute package to PyPI
     ```shell
-    pip install build twine
+    pip3 install build twine
     ```
 2. Run `build` command as the root folder, where file `pyproject.toml` is located
     ```shell
     rm -rf dist
-    python -m build
+    python3 -m build
     ```
     After that command, we will have `tar.gz` and `.whl` files in `dist` folder
 
@@ -80,7 +80,7 @@
     deactivate
     virtualenv .venv-test -p python3
     source .venv-test/bin/activate
-    pip install -i https://test.pypi.org/simple/ aitomatic
+    pip3 install -i https://test.pypi.org/simple/ aitomatic
     ```
 
 ## Steps to package and distribute CLI to PyPI
