@@ -24,7 +24,7 @@ class AitoConfig:
         self.app_name = self.aito_config.get('name')
         if self.aito_config.get('config_file') is not None:
             try:
-                file_path = Path.cwd() / self.aito_config['config_file']
+                file_path = Path.cwd().joinpath(self.aito_config['config_file'])
                 self.app_config = self.convert_ini_config_to_dict(file_path.read_text())
             except FileNotFoundError:
                 click.echo("Can't read app config file")
