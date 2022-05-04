@@ -27,7 +27,7 @@ class AitoConfig:
                 file_path = Path.cwd() / self.aito_config['config_file']
                 self.app_config = self.convert_ini_config_to_dict(file_path.read_text())
             except FileNotFoundError:
-                click.echo("Can't load app config file")
+                click.echo("Can't read app config file")
                 exit(1)
         else:
             self.app_config = {}
@@ -44,7 +44,7 @@ class AitoConfig:
         try:
             return json.loads(config_files[0].read_text())
         except json.decoder.JSONDecodeError:
-            click.echo("Can't read config file.")
+            click.echo("Can't read .aito config file.")
             exit(1)
 
     def convert_ini_config_to_dict(self, config_content):
