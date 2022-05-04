@@ -15,18 +15,13 @@ def load_config():
         return {}
 
 
-def get_version():
-    with open('version.txt', 'r') as f:
-        return f.read()
-
-
 AUTH_INFO = load_config()
 
 
 @click.group(
     context_settings={'obj': AUTH_INFO},
 )
-@click.version_option(version=get_version())
+@click.version_option(package_name='aitomatic')
 def cli():
     '''Aitomatic CLI tool to help manage aitomatic projects and apps'''
 
