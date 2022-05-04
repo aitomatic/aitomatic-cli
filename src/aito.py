@@ -21,7 +21,9 @@ AUTH_INFO = load_config()
 @click.group(
     context_settings={'obj': AUTH_INFO},
 )
-@click.version_option(package_name='aitomatic')
+@click.version_option(
+    package_name='aitomatic', message='%(package)s (%(prog)s): Version %(version)s'
+)
 def cli():
     '''Aitomatic CLI tool to help manage aitomatic projects and apps'''
 
