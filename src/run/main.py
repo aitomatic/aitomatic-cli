@@ -2,6 +2,7 @@ import click
 import json
 from pathlib import Path
 from src.login.main import authenticated
+from src.execute.app import execute_app
 
 
 @click.command()
@@ -9,7 +10,10 @@ from src.login.main import authenticated
 def run():
     '''Run the app based on config file'''
     config_data = read_aito_file()
+    app_name = config_data['name']
+    data = execute_app(app_name=app_name, data={'foo': 'bar'})
     click.echo(config_data)
+    click.echo(data)
 
 
 def read_aito_file():

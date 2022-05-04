@@ -12,11 +12,17 @@ def app(obj, app_name):
 
     click.echo(f'Executing app {app_name} in Aitomatic...')
 
-    api = AiCloudApi(token=obj.get("access_token"))
-    res = api.execute(app_name=app_name, data={"foo": "bar"})
-
-    data = res.json()
+    data = execute_app(app_name=app_name, data={'foo': 'bar'})
     if data['status'] == 'OK':
         click.echo(f'{data["message"]}. Open {data["url"]} for more information')
     else:
         click.echo(f'{data["message"]}.')
+
+
+@click.pass_obj
+def execute_app(obj, app_name, data):
+    api = AiCloudApi(token=obj.get("access_token"))
+    res = api.execute(app_name=app_name, data=data)
+
+    data = res.json()
+    return data
