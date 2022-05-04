@@ -1,9 +1,11 @@
 import click
 import json
 from pathlib import Path
+from src.login.main import authenticated
 
 
 @click.command()
+@authenticated
 def run():
     '''Run the app based on config file'''
     config_data = read_aito_file()
@@ -15,12 +17,12 @@ def read_aito_file():
     config_files = list(current_dir.glob('.aito'))
     if len(config_files) == 0:
         click.echo(
-            'There is no .aito config file in current folder. Please create one first'
+            'There is no .aito config file in current folder. Please create one first.'
         )
         exit(1)
 
     try:
         return json.loads(config_files[0].read_text())
     except json.decoder.JSONDecodeError:
-        click.echo("Can't read config file")
+        click.echo("Can't read config file.")
         exit(1)
