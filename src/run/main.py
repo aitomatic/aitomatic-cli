@@ -12,11 +12,11 @@ from src.execute.app import execute_app
     '--config',
     'config_file',
     type=click.STRING,
-    help='Relative path to config file to run the app',
+    help='ini file to run the app',
 )
 @authenticated
 def run(config_file):
-    '''Run the app based on config file'''
+    '''Run the app based on .aito config file'''
     aito_config = AitoConfig()
     if config_file is not None:
         aito_config.set_app_config(config_file)
