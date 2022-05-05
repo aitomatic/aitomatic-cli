@@ -7,9 +7,16 @@ from src.execute.app import execute_app
 
 
 @click.command()
+@click.option(
+    '--config-file',
+    '-c',
+    type=click.STRING,
+    help='Override path to config file to run the app',
+)
 @authenticated
-def run():
+def run(config_file):
     '''Run the app based on config file'''
+    click.echo(config_file)
     aito_config = AitoConfig()
 
     data = execute_app(
