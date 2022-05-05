@@ -30,6 +30,7 @@ Both the above commands would install the package globally and `aito` will be av
 - `aito deploy app <app_name>`: Deploy app to Aitomatic cluster
 - `aito execute app <app_name>`: Execute app in Aitomatic cluster
 - `aito run`: Run an app using `.aito` config file
+- `aito --version`: Show version of the CLI
 
 ## Feedback
 
