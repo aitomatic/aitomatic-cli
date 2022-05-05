@@ -20,10 +20,9 @@ def run(config_file):
     aito_config = AitoConfig()
     if config_file is not None:
         aito_config.set_app_config(config_file)
-    click.echo(aito_config.app_config)
 
     data = execute_app(
-        app_name=aito_config.app_name, data=json.dumps(aito_config.app_config)
+        app_name=aito_config.app_name, data=aito_config.app_config
     )
     click.echo(data)
 
