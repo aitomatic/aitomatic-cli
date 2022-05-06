@@ -23,7 +23,7 @@ Both the above commands would install the package globally and `aito` will be av
 
 In order to use command autocompletion, open a new shell after installing or run this command in the current shell
 ```shell
-source ~/.aito-autocompletion.sh
+source ~/.aitomatic/aito-autocompletion.sh
 ```
 
 ## How to use
