@@ -1,8 +1,8 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 if [[ $(basename $SHELL) = 'bash' ]];
 then
     echo "Installing bash autocompletion..."
-    echo "_AITO_COMPLETE=bash_source aito" > ~/.aito-autocompletion.sh
+    echo 'eval "$(_AITO_COMPLETE=bash_source aito)"' > ~/.aito-autocompletion.sh
     if [ -f ~/.bashrc ];
     then
         grep -q 'aito-autocompletion' ~/.bashrc
@@ -14,7 +14,7 @@ then
 elif [[ $(basename $SHELL) = 'zsh' ]];
 then
     echo "Installing zsh autocompletion..."
-    echo "_AITO_COMPLETE=zsh_source aito" > ~/.aito-autocompletion.sh
+    echo 'eval "$(_AITO_COMPLETE=zsh_source aito)"' > ~/.aito-autocompletion.sh
     if [ -f ~/.zshrc ];
     then
         grep -q 'aito-autocompletion' ~/.zshrc
@@ -26,4 +26,3 @@ then
         fi
     fi
 fi
-source ~/.aito-autocompletion.sh
