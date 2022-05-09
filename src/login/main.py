@@ -143,7 +143,7 @@ def wait_for_login_callback(obj):
                 save_credential(
                     access_token=polling_data['access_token'],
                     refresh_token=polling_data.get('refresh_token', ''),
-                    id_token=polling_data.get('id_token', '')
+                    id_token=polling_data.get('id_token', ''),
                 )
                 click.echo('Login successfully')
                 exit(0)
@@ -161,12 +161,12 @@ def save_credential(obj, access_token, refresh_token, id_token):
     obj['access_token'] = access_token
     obj['refresh_token'] = refresh_token
     obj['id_token'] = id_token
-    
+
     parser = ConfigParser()
     parser[AITOMATIC_PROFILE] = {
         'access_token': access_token,
         'refresh_token': refresh_token,
-        'id_token': id_token
+        'id_token': id_token,
     }
 
     if not CREDENTIAL_FILE.exists():
@@ -226,7 +226,7 @@ def refresh_token(obj):
         save_credential(
             access_token=data['access_token'],
             refresh_token=token,
-            id_token=data.get('id_token', '')
+            id_token=data.get('id_token', ''),
         )
     else:
         prompt_login()
