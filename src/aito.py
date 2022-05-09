@@ -1,16 +1,17 @@
 import click
-import json
 from src.execute.main import execute
 from src.deploy.main import deploy
 from src.login.main import login
 from src.logout.main import logout
 from src.run.main import run
-from src.constants import CREDENTIAL_FILE
+from src.constants import CREDENTIAL_FILE, AITOMATIC_PROFILE
+from src.utils import read_ini_file
 
 
 def load_config():
     if CREDENTIAL_FILE.exists():
-        return json.loads(CREDENTIAL_FILE.read_text())
+        credentials = read_ini_file(CREDENTIAL_FILE)
+        return credentials[AITOMATIC_PROFILE]
     else:
         return {}
 

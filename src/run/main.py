@@ -1,25 +1,26 @@
 import click
 import json
-from configparser import ConfigParser
 from pathlib import Path
 from src.login.main import authenticated
 from src.execute.app import execute_app
+from src.utils import read_ini_file
+from src.constants import AITOMATIC_PROFILE
 
 
 @click.command()
 @click.option(
     '-c',
     '--config',
-    'config_file',
+    'app_config_file',
     type=click.STRING,
     help='ini file to run the app',
 )
 @authenticated
-def run(config_file):
+def run(app_config_file):
     '''Run the app based on .aito config file'''
     aito_config = AitoConfig()
-    if config_file is not None:
-        aito_config.set_app_config(config_file)
+    if app_config_file is not None:
+        aito_config.set_app_config(app_config_file)
 
     data = execute_app(app_name=aito_config.app_name, data=aito_config.app_config)
     click.echo(data)
@@ -44,27 +45,17 @@ class AitoConfig:
             exit(1)
 
         try:
-            return json.loads(config_files[0].read_text())
-        except json.decoder.JSONDecodeError:
-            click.echo("Can't read .aito config file.")
+            return read_ini_file(config_files[0])[AITOMATIC_PROFILE]
+        except KeyError:
+            click.echo(
+                f"Can't read .aito config file with profile {AITOMATIC_PROFILE}."
+            )
             exit(1)
 
-    def convert_ini_config_to_dict(self, config_content):
-        parser = ConfigParser()
-        result = {}
-
-        parser.read_string(config_content)
-        for section in parser.sections():
-            result[section] = {}
-            for name, value in parser.items(section):
-                result[section][name] = value
-
-        return result
-
-    def set_app_config(self, config_file):
+    def set_app_config(self, app_config_file):
         try:
-            file_path = Path.cwd().joinpath(config_file)
-            self.app_config = self.convert_ini_config_to_dict(file_path.read_text())
+            file_path = Path.cwd().joinpath(app_config_file)
+            self.app_config = read_ini_file(file_path)
         except FileNotFoundError:
             click.echo("Can't read app config file")
             exit(1)
