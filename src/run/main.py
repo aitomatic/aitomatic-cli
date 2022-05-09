@@ -47,7 +47,7 @@ class AitoConfig:
         try:
             return read_ini_file(config_files[0])[AITOMATIC_PROFILE]
         except KeyError:
-            click.echo("Can't read .aito config file.")
+            click.echo(f"Can't read .aito config file with profile {AITOMATIC_PROFILE}.")
             exit(1)
 
     def set_app_config(self, app_config_file):
