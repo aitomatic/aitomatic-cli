@@ -1,9 +1,9 @@
 import click
 import json
-from configparser import ConfigParser
 from pathlib import Path
 from src.login.main import authenticated
 from src.execute.app import execute_app
+from src.utils import read_ini_file
 
 
 @click.command()
@@ -49,22 +49,10 @@ class AitoConfig:
             click.echo("Can't read .aito config file.")
             exit(1)
 
-    def convert_ini_config_to_dict(self, config_content):
-        parser = ConfigParser()
-        result = {}
-
-        parser.read_string(config_content)
-        for section in parser.sections():
-            result[section] = {}
-            for name, value in parser.items(section):
-                result[section][name] = value
-
-        return result
-
     def set_app_config(self, config_file):
         try:
             file_path = Path.cwd().joinpath(config_file)
-            self.app_config = self.convert_ini_config_to_dict(file_path.read_text())
+            self.app_config = read_ini_file(file_path)
         except FileNotFoundError:
             click.echo("Can't read app config file")
             exit(1)
