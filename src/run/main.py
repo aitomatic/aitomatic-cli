@@ -11,16 +11,16 @@ from src.constants import AITOMATIC_PROFILE
 @click.option(
     '-c',
     '--config',
-    'config_file',
+    'app_config_file',
     type=click.STRING,
     help='ini file to run the app',
 )
 @authenticated
-def run(config_file):
+def run(app_config_file):
     '''Run the app based on .aito config file'''
     aito_config = AitoConfig()
-    if config_file is not None:
-        aito_config.set_app_config(config_file)
+    if app_config_file is not None:
+        aito_config.set_app_config(app_config_file)
 
     data = execute_app(app_name=aito_config.app_name, data=aito_config.app_config)
     click.echo(data)
