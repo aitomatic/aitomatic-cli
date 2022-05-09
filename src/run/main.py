@@ -4,6 +4,7 @@ from pathlib import Path
 from src.login.main import authenticated
 from src.execute.app import execute_app
 from src.utils import read_ini_file
+from src.constants import AITOMATIC_PROFILE
 
 
 @click.command()
@@ -44,8 +45,8 @@ class AitoConfig:
             exit(1)
 
         try:
-            return json.loads(config_files[0].read_text())
-        except json.decoder.JSONDecodeError:
+            return read_ini_file(config_files[0])[AITOMATIC_PROFILE]
+        except KeyError:
             click.echo("Can't read .aito config file.")
             exit(1)
 
