@@ -156,7 +156,12 @@ def wait_for_login_callback(obj):
         exit(1)
 
 
-def save_credential(access_token, refresh_token, id_token):
+@click.pass_obj
+def save_credential(obj, access_token, refresh_token, id_token):
+    obj['access_token'] = access_token
+    obj['refresh_token'] = refresh_token
+    obj['id_token'] = id_token
+    
     parser = ConfigParser()
     parser[AITOMATIC_PROFILE] = {
         'access_token': access_token,
