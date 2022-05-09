@@ -1,4 +1,5 @@
 import click
+from configparser import ConfigParser
 import requests
 from multiprocessing import Process, Queue
 from http.server import HTTPServer
@@ -141,11 +142,9 @@ def wait_for_login_callback(obj):
 
             if polling_data.get('access_token') is not None:
                 save_credential(
-                    {
-                        'access_token': polling_data['access_token'],
-                        'refresh_token': polling_data.get('refresh_token', ''),
-                        'id': polling_data.get('id_token', ''),
-                    }
+                    access_token=polling_data['access_token'],
+                    refresh_token=polling_data.get('refresh_token', ''),
+                    id_token=polling_data.get('id_token', '')
                 )
                 click.echo('Login successfully')
                 exit(0)
@@ -158,14 +157,18 @@ def wait_for_login_callback(obj):
         exit(1)
 
 
-@click.pass_obj
-def save_credential(obj, data):
-    obj['access_token'] = data['access_token']
-    obj['refresh_token'] = data['refresh_token']
-    obj['id'] = data['id']
+def save_credential(access_token, refresh_token, id_token):
+    parser = ConfigParser()
+    parser['default'] = {
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'id_token': id_token
+    }
+
     if not CREDENTIAL_FILE.exists():
         CREDENTIAL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    CREDENTIAL_FILE.write_text(json.dumps(data))
+    with open(CREDENTIAL_FILE, 'w') as f:
+        parser.write(f)
 
 
 def authenticated(f):
@@ -217,11 +220,9 @@ def refresh_token(obj):
     if res.status_code == 200:
         data = res.json()
         save_credential(
-            {
-                'access_token': data['access_token'],
-                'refresh_token': token,
-                'id': data.get('id_token', ''),
-            }
+            access_token=data['access_token'],
+            refresh_token=token,
+            id_token=data.get('id_token', '')
         )
     else:
         prompt_login()
