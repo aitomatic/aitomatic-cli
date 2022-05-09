@@ -49,9 +49,9 @@ class AitoConfig:
             click.echo("Can't read .aito config file.")
             exit(1)
 
-    def set_app_config(self, config_file):
+    def set_app_config(self, app_config_file):
         try:
-            file_path = Path.cwd().joinpath(config_file)
+            file_path = Path.cwd().joinpath(app_config_file)
             self.app_config = read_ini_file(file_path)
         except FileNotFoundError:
             click.echo("Can't read app config file")
