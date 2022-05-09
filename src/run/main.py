@@ -7,14 +7,21 @@ from src.execute.app import execute_app
 
 
 @click.command()
+@click.option(
+    '-c',
+    '--config',
+    'config_file',
+    type=click.STRING,
+    help='ini file to run the app',
+)
 @authenticated
-def run():
-    '''Run the app based on config file'''
+def run(config_file):
+    '''Run the app based on .aito config file'''
     aito_config = AitoConfig()
+    if config_file is not None:
+        aito_config.set_app_config(config_file)
 
-    data = execute_app(
-        app_name=aito_config.app_name, data=json.dumps(aito_config.app_config)
-    )
+    data = execute_app(app_name=aito_config.app_name, data=aito_config.app_config)
     click.echo(data)
 
 
@@ -23,12 +30,7 @@ class AitoConfig:
         self.aito_config = self.read_aito_file()
         self.app_name = self.aito_config.get('name')
         if self.aito_config.get('config_file') is not None:
-            try:
-                file_path = Path.cwd().joinpath(self.aito_config['config_file'])
-                self.app_config = self.convert_ini_config_to_dict(file_path.read_text())
-            except FileNotFoundError:
-                click.echo("Can't read app config file")
-                exit(1)
+            self.set_app_config(self.aito_config['config_file'])
         else:
             self.app_config = {}
 
@@ -58,3 +60,11 @@ class AitoConfig:
                 result[section][name] = value
 
         return result
+
+    def set_app_config(self, config_file):
+        try:
+            file_path = Path.cwd().joinpath(config_file)
+            self.app_config = self.convert_ini_config_to_dict(file_path.read_text())
+        except FileNotFoundError:
+            click.echo("Can't read app config file")
+            exit(1)
