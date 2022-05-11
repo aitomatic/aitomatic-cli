@@ -1,5 +1,6 @@
 from base64 import urlsafe_b64encode
 from configparser import ConfigParser
+from click import secho
 from os import urandom
 from hashlib import sha256
 from pathlib import Path
@@ -39,3 +40,7 @@ def read_ini_file(file_path: Path) -> dict:
             result[section][name] = value
 
     return result
+
+
+def show_error_message(message: str) -> None:
+    secho(message, bold=True, fg='red')

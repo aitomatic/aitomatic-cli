@@ -7,7 +7,12 @@ import time
 from functools import update_wrapper, partial
 
 from .server import LoginServer
-from src.utils import get_random_string, create_code_challenger, create_code_verifier
+from src.utils import (
+    get_random_string,
+    create_code_challenger,
+    create_code_verifier,
+    show_error_message,
+)
 from src.constants import CREDENTIAL_FILE, AITOMATIC_PROFILE
 from src.logout.main import remove_local_credential_file
 
@@ -152,7 +157,7 @@ def wait_for_login_callback(obj):
         time.sleep(5)
         wait_for_login_callback()
     except KeyboardInterrupt:
-        print('Login flow interrupted by user')
+        show_error_message('Login flow interrupted by user')
         exit(1)
 
 
@@ -200,7 +205,7 @@ def authenticated(f):
 
 
 def prompt_login():
-    click.echo("You're not logged in. Please run `aito login` first.")
+    show_error_message("You're not logged in. Please run `aito login` first.")
     remove_local_credential_file()
     exit(1)
 
