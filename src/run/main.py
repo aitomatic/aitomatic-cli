@@ -1,9 +1,8 @@
 import click
-import json
 from pathlib import Path
 from src.login.main import authenticated
 from src.execute.app import execute_app
-from src.utils import read_ini_file
+from src.utils import read_ini_file, show_error_message
 from src.constants import AITOMATIC_PROFILE
 
 
@@ -39,17 +38,15 @@ class AitoConfig:
         current_dir = Path.cwd()
         config_files = list(current_dir.glob('.aito'))
         if len(config_files) == 0:
-            click.echo(
-                'There is no .aito config file in current folder. Please create one first.'
+            show_error_message(
+                'No .aito file in current folder. Please create one first.'
             )
             exit(1)
 
         try:
             return read_ini_file(config_files[0])[AITOMATIC_PROFILE]
         except KeyError:
-            click.echo(
-                f"Can't read .aito config file with profile {AITOMATIC_PROFILE}."
-            )
+            show_error_message(f"Can't read .aito config file")
             exit(1)
 
     def set_app_config(self, app_config_file):
@@ -57,5 +54,5 @@ class AitoConfig:
             file_path = Path.cwd().joinpath(app_config_file)
             self.app_config = read_ini_file(file_path)
         except FileNotFoundError:
-            click.echo("Can't read app config file")
+            show_error_message("Can't read app config file")
             exit(1)

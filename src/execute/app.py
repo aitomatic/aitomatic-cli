@@ -1,6 +1,7 @@
 import click
 from src.login.main import authenticated
 from src.api.aitomatic import AiCloudApi
+from src.utils import show_error_message
 
 
 @click.command()
@@ -16,7 +17,7 @@ def app(obj, app_name):
     if data['status'] == 'OK':
         click.echo(f'{data["message"]}. Open {data["url"]} for more information')
     else:
-        click.echo(f'{data["message"]}.')
+        show_error_message(f'{data["message"]}.')
 
 
 @click.pass_obj
