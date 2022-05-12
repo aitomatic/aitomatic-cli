@@ -1,3 +1,4 @@
+import json
 import os
 import requests
 
@@ -7,7 +8,7 @@ class AiCloudApi:
         self.token = token
         self.API_BASE = os.getenv(
             'AI_CLI_API_BASE',
-            'http://a20ae33fe805a4d24bef115a973c630a-434493144.us-west-2.elb.amazonaws.com',
+            'http://koda.dev.cloud.aitomatic.com',
         )
 
     def deploy(self, app_name, data):
@@ -28,6 +29,19 @@ class AiCloudApi:
             data=data,
             headers={
                 'content-type': 'application/x-www-form-urlencoded',
+                'Authorization': f'Bearer {self.token}',
+            },
+        )
+
+        return res
+
+    def trigger(self, app_name, data):
+        processed_data = {'config': data}
+        res = requests.post(
+            url=f"{self.API_BASE}/app/{app_name}/start",
+            data=json.dumps(processed_data),
+            headers={
+                'content-type': 'application/json',
                 'Authorization': f'Bearer {self.token}',
             },
         )

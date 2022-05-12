@@ -1,7 +1,7 @@
 import click
 from pathlib import Path
+from src.api.aitomatic import AiCloudApi
 from src.login.main import authenticated
-from src.execute.app import execute_app
 from src.utils import read_ini_file, show_error_message
 from src.constants import AITOMATIC_PROFILE
 
@@ -21,7 +21,7 @@ def run(app_config_file):
     if app_config_file is not None:
         aito_config.set_app_config(app_config_file)
 
-    data = execute_app(app_name=aito_config.app_name, data=aito_config.app_config)
+    data = trigger_app(app_name=aito_config.app_name, data=aito_config.app_config)
     click.echo(data)
 
 
@@ -56,3 +56,12 @@ class AitoConfig:
         except FileNotFoundError:
             show_error_message("Can't read app config file")
             exit(1)
+
+
+@click.pass_obj
+def trigger_app(obj, app_name, data):
+    api = AiCloudApi(token=obj.get("access_token"))
+    res = api.trigger(app_name=app_name, data=data)
+
+    data = res.json()
+    return data
