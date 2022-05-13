@@ -3,7 +3,6 @@ from pathlib import Path
 from src.api.aitomatic import AiCloudApi
 from src.login.main import authenticated
 from src.utils import read_ini_file, show_error_message
-from src.constants import AITOMATIC_PROFILE
 
 
 @click.command()
@@ -15,51 +14,82 @@ from src.constants import AITOMATIC_PROFILE
     help='ini file to run the app',
 )
 @authenticated
-def run(app_config_file):
+def run(app_config_file: str) -> None:
     '''Run the app based on .aito config file'''
-    aito_config = AitoConfig()
-    if app_config_file is not None:
-        aito_config.set_app_config(app_config_file)
+    aito_config = read_aito_file(Path.cwd())
+    if 'project' in aito_config.keys():
+        run_project(aito_config)
+    else:
+        run_app(aito_config)
+    
+    # if app_config_file is not None:
+    #     aito_config.set_app_config(app_config_file)
 
-    data = trigger_app(app_name=aito_config.app_name, data=aito_config.app_config)
-    click.echo(data)
+    # data = trigger_app(app_name=aito_config.app_name, data=aito_config.app_config)
+    # click.echo(data)
 
 
-class AitoConfig:
-    def __init__(self) -> None:
-        self.aito_config = self.read_aito_file()
-        self.app_name = self.aito_config.get('name')
-        if self.aito_config.get('config_file') is not None:
-            self.set_app_config(self.aito_config['config_file'])
-        else:
-            self.app_config = {}
+def run_project(aito_config: dict) -> None:
+    project_name = aito_config['project']['name']
+    apps = []
+    for key in aito_config.keys():
+        if 'app' in key:
+            apps.append({
+                'name': key.split(' ')[1],
+                'src': aito_config[key]['src']
+            })
+    if len(apps) == 0:
+        click.echo(f'Project {project_name} has no app to run')
+        exit(0)
+    elif len(apps) == 1:
+        selected_app = apps[0]
+    else:
+        click.echo(f'Project {project_name} has {len(apps)} apps. Please select one.')
+        for i in range(len(apps)):
+            click.secho(f'Select {i + 1} to run app {apps[i]["name"]}.', fg='green', bold=True)
+        choice = click.prompt(
+            'Please select app to run',
+            type=click.Choice([str(i + 1) for i in range(len(apps))])
+        )
+        selected_app = apps[int(choice) - 1]
 
-    def read_aito_file(self):
-        current_dir = Path.cwd()
-        config_files = list(current_dir.glob('.aito'))
-        if len(config_files) == 0:
-            show_error_message(
-                'No .aito file in current folder. Please create one first.'
-            )
+    app_path = Path.cwd().joinpath(selected_app['src'])
+    app_aito_config = read_aito_file(app_path)
+    run_app(app_aito_config)
+
+
+def run_app(aito_confg: dict) -> None:
+    click.echo(f'Running app {aito_confg["app"]["name"]}...')
+
+
+def read_aito_file(folder_path: Path) -> dict:
+    files = list(folder_path.glob('.aito'))
+    
+    if len(files) == 0:
+        show_error_message(
+            '.aito file not found. Please create one first.'
+        )
+        exit(1)
+
+    try:
+        result = read_ini_file(files[0])
+        if not is_valid_aito_file(result):
+            show_error_message(f".aito file is not valid")
             exit(1)
+        return result
+    except KeyError:
+        show_error_message(f"Can't read .aito config file")
+        exit(1)
 
-        try:
-            return read_ini_file(config_files[0])[AITOMATIC_PROFILE]
-        except KeyError:
-            show_error_message(f"Can't read .aito config file")
-            exit(1)
 
-    def set_app_config(self, app_config_file):
-        try:
-            file_path = Path.cwd().joinpath(app_config_file)
-            self.app_config = read_ini_file(file_path)
-        except FileNotFoundError:
-            show_error_message("Can't read app config file")
-            exit(1)
+def is_valid_aito_file(aito_obj: dict) -> bool:
+    if 'project' in aito_obj or 'app' in aito_obj:
+        return True
+    return False
 
 
 @click.pass_obj
-def trigger_app(obj, app_name, data):
+def trigger_app(obj, app_name: str, data: dict) -> dict:
     api = AiCloudApi(token=obj.get("access_token"))
     res = api.trigger(app_name=app_name, data=data)
 
