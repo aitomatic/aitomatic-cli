@@ -59,11 +59,11 @@ def run_app(ctx, aito_confg: dict, app_path: Path = None) -> None:
     current_dir = Path.cwd() if app_path is None else Path.cwd().joinpath(app_path)
     config = aito_confg['app'].get('config')
     data = {}
-    if config is not None:
-        data = read_ini_file(current_dir.joinpath(config))
     if ctx.params['app_config_file'] is not None:
         data = read_ini_file(Path.cwd().joinpath(ctx.params['app_config_file']))
-
+    elif config is not None:
+        data = read_ini_file(current_dir.joinpath(config))
+    
     click.echo(data)
     res = trigger_app(app_name=app_name, data=data)
     click.echo(res)
