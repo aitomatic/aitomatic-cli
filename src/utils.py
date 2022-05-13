@@ -33,13 +33,17 @@ def read_ini_file(file_path: Path) -> dict:
     parser = ConfigParser()
     result = {}
 
-    parser.read_string(file_path.read_text())
-    for section in parser.sections():
-        result[section] = {}
-        for name, value in parser.items(section):
-            result[section][name] = value
+    try:
+        parser.read_string(file_path.read_text())
+        for section in parser.sections():
+            result[section] = {}
+            for name, value in parser.items(section):
+                result[section][name] = value
 
-    return result
+        return result
+    except FileNotFoundError:
+        show_error_message(f"File {file_path} not found")
+        exit(1)
 
 
 def show_error_message(message: str) -> None:
