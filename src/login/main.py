@@ -176,7 +176,7 @@ def save_credential(obj, access_token, refresh_token, id_token):
 
     if not CREDENTIAL_FILE.exists():
         CREDENTIAL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(CREDENTIAL_FILE, 'w') as f:
+    with click.open_file(CREDENTIAL_FILE, 'w') as f:
         parser.write(f)
 
 
