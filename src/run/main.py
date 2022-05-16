@@ -63,28 +63,19 @@ def run_app(ctx, aito_confg: dict, app_path: Path = None) -> None:
         data = read_ini_file(Path.cwd().joinpath(ctx.params['app_config_file']))
     elif config is not None:
         data = read_ini_file(current_dir.joinpath(config))
-    
+
     click.echo(data)
     res = trigger_app(app_name=app_name, data=data)
     click.echo(res)
 
 
 def read_aito_file(folder_path: Path) -> dict:
-    files = list(folder_path.glob('.aito'))
-
-    if len(files) == 0:
-        show_error_message('.aito file not found. Please create one first.')
+    aito_file_path = folder_path.joinpath('.aito')
+    result = read_ini_file(aito_file_path)
+    if not is_valid_aito_file(result):
+        show_error_message('.aito file is not valid')
         exit(1)
-
-    try:
-        result = read_ini_file(files[0])
-        if not is_valid_aito_file(result):
-            show_error_message(f".aito file is not valid")
-            exit(1)
-        return result
-    except KeyError:
-        show_error_message(f"Can't read .aito config file")
-        exit(1)
+    return result
 
 
 def is_valid_aito_file(aito_obj: dict) -> bool:
