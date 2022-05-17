@@ -8,7 +8,7 @@ class AiCloudApi:
         self.token = token
         self.API_BASE = os.getenv(
             'AI_CLI_API_BASE',
-            'http://koda.dev.cloud.aitomatic.com',
+            'https://koda.dev.cloud.aitomatic.com',
         )
 
     def deploy(self, app_name, data):
