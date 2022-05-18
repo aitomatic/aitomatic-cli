@@ -47,3 +47,12 @@ class AiCloudApi:
         )
 
         return res
+
+    def list_jobs(self, app_name):
+        res = requests.get(
+            url=f"{self.API_BASE}/app/{app_name}/jobs",
+            headers={
+                'Authorization': f'Bearer {self.token}',
+            },
+        )
+        return res
