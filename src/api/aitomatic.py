@@ -56,3 +56,12 @@ class AiCloudApi:
             },
         )
         return res
+
+    def log_job(self, job_id):
+        res = requests.get(
+            url=f"{self.API_BASE}/job/{job_id}",
+            headers={
+                'Authorization': f'Bearer {self.token}',
+            },
+        )
+        return res

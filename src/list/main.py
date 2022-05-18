@@ -8,7 +8,7 @@ from src.api.aitomatic import AiCloudApi
 @click.pass_obj
 def list(obj, app_name: str, n: int) -> None:
     '''List all jobs related to an app'''
-    click.echo(f"Listing all {app_name}'s jobs...")
+    click.echo(f"Listing all {app_name}'s jobs...\n")
 
     api = AiCloudApi(token=obj.get("access_token"))
     res = api.list_jobs(app_name=app_name)
