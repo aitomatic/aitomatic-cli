@@ -35,6 +35,7 @@ source ~/.aitomatic/aito-autocompletion.sh
 - `aito run`: Run an app using `.aito` config file
 - `aito --version`: Show version of the CLI
 - `aito list <app_name>`: List all jobs related to an app
+- `aito logs <job_id>`: Show log of a job
 
 ## Feedback
 
