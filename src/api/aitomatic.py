@@ -35,8 +35,8 @@ class AiCloudApi:
 
         return res
 
-    def trigger(self, app_name, data):
-        processed_data = {'config': data}
+    def start_app(self, app_name, data):
+        processed_data = {'input': data}
         res = requests.post(
             url=f"{self.API_BASE}/app/{app_name}/start",
             data=json.dumps(processed_data),
@@ -46,4 +46,22 @@ class AiCloudApi:
             },
         )
 
+        return res
+
+    def list_jobs(self, app_name):
+        res = requests.get(
+            url=f"{self.API_BASE}/app/{app_name}/jobs",
+            headers={
+                'Authorization': f'Bearer {self.token}',
+            },
+        )
+        return res
+
+    def log_job(self, job_id):
+        res = requests.get(
+            url=f"{self.API_BASE}/job/{job_id}",
+            headers={
+                'Authorization': f'Bearer {self.token}',
+            },
+        )
         return res

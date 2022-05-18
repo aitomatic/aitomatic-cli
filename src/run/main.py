@@ -54,7 +54,7 @@ def run_project(aito_config: dict) -> None:
 @click.pass_context
 def run_app(ctx, aito_confg: dict, app_path: Path = None) -> None:
     app_name = aito_confg['app']['name']
-    click.echo(f'Running app {app_name}...')
+    click.echo(f'Running app {app_name}...\n')
 
     current_dir = Path.cwd() if app_path is None else Path.cwd().joinpath(app_path)
     config = aito_confg['app'].get('config')
@@ -64,9 +64,12 @@ def run_app(ctx, aito_confg: dict, app_path: Path = None) -> None:
     elif config is not None:
         data = read_ini_file(current_dir.joinpath(config))
 
-    click.echo(data)
-    res = trigger_app(app_name=app_name, data=data)
-    click.echo(res)
+    res = start_app(app_name=app_name, data=data)
+    if res['status'] == 'success':
+        click.echo('App started successfully')
+        click.secho(f"Run `aito logs {res['job_id']}` to view job's log", fg='green')
+    else:
+        show_error_message('App failed to start')
 
 
 def read_aito_file(folder_path: Path) -> dict:
@@ -85,9 +88,9 @@ def is_valid_aito_file(aito_obj: dict) -> bool:
 
 
 @click.pass_obj
-def trigger_app(obj, app_name: str, data: dict) -> dict:
+def start_app(obj, app_name: str, data: dict) -> dict:
     api = AiCloudApi(token=obj.get("access_token"))
-    res = api.trigger(app_name=app_name, data=data)
+    res = api.start_app(app_name=app_name, data=data)
 
     data = res.json()
     return data
