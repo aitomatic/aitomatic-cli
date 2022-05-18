@@ -35,8 +35,8 @@ class AiCloudApi:
 
         return res
 
-    def trigger(self, app_name, data):
-        processed_data = {'config': data}
+    def start_app(self, app_name, data):
+        processed_data = {'input': data}
         res = requests.post(
             url=f"{self.API_BASE}/app/{app_name}/start",
             data=json.dumps(processed_data),
