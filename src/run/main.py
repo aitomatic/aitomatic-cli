@@ -54,7 +54,7 @@ def run_project(aito_config: dict) -> None:
 @click.pass_context
 def run_app(ctx, aito_confg: dict, app_path: Path = None) -> None:
     app_name = aito_confg['app']['name']
-    click.echo(f'Running app {app_name}...')
+    click.echo(f'Running app {app_name}...\n')
 
     current_dir = Path.cwd() if app_path is None else Path.cwd().joinpath(app_path)
     config = aito_confg['app'].get('config')
