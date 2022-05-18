@@ -4,6 +4,7 @@ from src.deploy.main import deploy
 from src.login.main import login
 from src.logout.main import logout
 from src.run.main import run
+from src.list.main import list
 from src.constants import CREDENTIAL_FILE, AITOMATIC_PROFILE
 from src.utils import read_ini_file
 
@@ -34,6 +35,7 @@ cli.add_command(logout)
 cli.add_command(execute)
 cli.add_command(deploy)
 cli.add_command(run)
+cli.add_command(list)
 
 
 if __name__ == '__main__':
