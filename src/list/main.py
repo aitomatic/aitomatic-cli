@@ -1,11 +1,13 @@
 import click
 from src.api.aitomatic import AiCloudApi
+from src.login.main import authenticated
 
 
 @click.command()
 @click.argument('app_name', type=str)
 @click.option('-n', 'n', default=10, help='Number of jobs')
 @click.pass_obj
+@authenticated
 def list(obj, app_name: str, n: int) -> None:
     '''List all jobs related to an app'''
     click.echo(f"Listing all {app_name}'s jobs...\n")

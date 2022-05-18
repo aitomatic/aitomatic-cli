@@ -1,11 +1,13 @@
 import click
 from src.api.aitomatic import AiCloudApi
+from src.login.main import authenticated
 from src.utils import show_error_message
 
 
 @click.command()
 @click.argument('job_id', type=str)
 @click.pass_obj
+@authenticated
 def logs(obj, job_id: str) -> None:
     '''Show log of a job'''
     click.echo(f'Retrieving log of job {job_id}...\n')
