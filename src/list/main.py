@@ -16,7 +16,7 @@ def list(obj, app_name: str, n: int) -> None:
     res = api.list_jobs(app_name=app_name)
     data = res.json()
     
-    jobs = data['jobs']
+    jobs = data['data']
     if len(jobs) > 0:
         click.secho('ID     Status      Created at', fg='green')
         for job in jobs:
