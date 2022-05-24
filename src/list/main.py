@@ -1,6 +1,7 @@
 import click
 from src.api.aitomatic import AiCloudApi
 from src.login.main import authenticated
+from prettytable import PrettyTable
 
 
 @click.command()
@@ -16,10 +17,11 @@ def list(obj, app_name: str, n: int) -> None:
     res = api.list_jobs(app_name=app_name)
     data = res.json()
     
-    jobs = data['jobs']
+    jobs = data['data']
     if len(jobs) > 0:
-        click.secho('ID     Status      Created at', fg='green')
+        table = PrettyTable(['ID', 'Status', 'Created at'])
         for job in jobs:
-            click.echo(f"{job['id']}        {job['status']}     {job['createdAt']}")
+            table.add_row([job['id'], job['status'], job['createdAt']])
+        click.echo(table)
     else:
         click.echo('This app has no job')
