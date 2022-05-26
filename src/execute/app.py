@@ -14,7 +14,7 @@ def app(obj, app_name):
     click.echo(f'Executing app {app_name} in Aitomatic...')
 
     data = execute_app(app_name=app_name, data={'foo': 'bar'})
-    if data['status'] == 'OK':
+    if data['status'] == 'success':
         click.echo(f'{data["message"]}. Open {data["url"]} for more information')
     else:
         show_error_message(f'{data["message"]}.')
