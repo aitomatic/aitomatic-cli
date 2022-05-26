@@ -14,7 +14,7 @@ def list(obj, app_name: str, n: int) -> None:
     click.echo(f"Listing all {app_name}'s jobs...\n")
 
     api = AiCloudApi(token=obj.get("access_token"))
-    res = api.list_jobs(app_name=app_name)
+    res = api.list_jobs(app_name=app_name, size=n)
     data = res.json()
     
     jobs = data['data']
