@@ -48,9 +48,9 @@ class AiCloudApi:
 
         return res
 
-    def list_jobs(self, app_name):
+    def list_jobs(self, app_name, size):
         res = requests.get(
-            url=f"{self.API_BASE}/app/{app_name}/jobs",
+            url=f"{self.API_BASE}/app/{app_name}/jobs?size={size}",
             headers={
                 'Authorization': f'Bearer {self.token}',
             },
