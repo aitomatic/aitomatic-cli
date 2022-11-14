@@ -24,8 +24,8 @@ class WebModel:
     predictions = model.predict({'X': MyDataFrame})
     """
 
-    PREDICTION_ENDPOINT = f'{API_ROOT}/inferencing'
     MODELS_ENDPOINT = f'{API_ROOT}/models'
+    PREDICTION_ENDPOINT = f'{MODELS_ENDPOINT}/infer'
     METADATA_ENDPOINT = f'{MODELS_ENDPOINT}/metadata'
     METRICS_ENDPOINT = f'{MODELS_ENDPOINT}/metrics'
 
@@ -218,8 +218,8 @@ class WebModel:
             raise ConnectionError(err)
 
         resp_data = json.loads(resp.content)
-        self.stats = resp_data['stats']
-        self.metrics = resp_data['metrics']
+        self.stats = resp_data['result']['stats']
+        self.metrics = resp_data['result']['metrics']
         return self
 
     def _save_metrics(self):
