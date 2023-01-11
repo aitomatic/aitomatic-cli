@@ -1,3 +1,4 @@
+import os
 import sys
 from typing import Dict, Tuple, Union, List
 
@@ -12,7 +13,15 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-API_ROOT = 'https://model-api-dev.platform.aitomatic.com'
+AITO_ENV = os.getenv('AITOMATIC_ENVIRONMENT', 'staging')
+
+if AITO_ENV == 'dev':
+    API_ROOT = 'https://model-api-dev.platform.aitomatic.com'
+elif AITO_ENV == 'staging':
+    API_ROOT = 'https://model-api-stg.platform.aitomatic.com'
+elif AITO_ENV == 'production':
+    API_ROOT = 'https://model-api-prod.platform.aitomatic.com'
+
 
 
 class WebModel:
@@ -310,7 +319,7 @@ def convert_json_to_data(json_data: Dict, types_dict: Dict) -> Dict:
     for k,v in json_data.items():
         goal_type = types_dict.get(k, pd.DataFrame)
         if goal_type == pd.DataFrame or goal_type == pd.Series:
-            out_data[k] = goal_type(v)
+            out_data[k] = goal_type(eval(v))
         elif goal_type == np.ndarray:
             out_data[k] = np.array(v, dtype='O')
         else:
