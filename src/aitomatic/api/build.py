@@ -1,8 +1,9 @@
 import os
 import json
-import rquests
+import requests
 from aitomatic.api import get_api_root, get_project_id
 from aitomatic.api import model_params as mp 
+
 
 API_TOKEN = os.getenv('AITOMATIC_API_TOKEN')
 
@@ -85,7 +86,7 @@ class ModelBuilder:
 
 
 def make_request(request_type: str, url: str, **kwargs):
-    func = requests.get(request_type)
+    func = getattr(requests, request_type)
     if func is None:
         raise ValueError(f'Invalid request type {request_type}. '
                          f'Must be get, post or put')

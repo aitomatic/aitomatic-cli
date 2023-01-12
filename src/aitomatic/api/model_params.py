@@ -27,7 +27,7 @@ MODEL_HYPER_PARAMS = {
     'fuzzy': {
         'threshold': [0,1],
         'membership_error_width': dict,
-    }
+    },
     'XGBClassifier': {
         'threshold': [0, 1],
         'n_estimators': [5, 100],
@@ -86,7 +86,7 @@ class ModelParams(Params):
 
 
     def __init__(self, model_type: str, model_name: str,
-                 knowledge_set_name: str data_set_name: str,
+                 knowledge_set_name: str, data_set_name: str,
                  project_name: str=None):
         super().__init__()
         self.OUTPUT_KEYS.extend(
