@@ -40,7 +40,7 @@ class WebModel:
             project_name = os.getenv('AITOMATIC_PROJECT_NAME')
             project_id = os.getenv('AITOMATIC_PROJECT_ID')
         else:
-            project_id = get_project_id(project_name)
+            project_id = get_project_id(project_name, api_token=api_token)
 
         self.project_name = project_name
         self.project_id = project_id
@@ -61,7 +61,6 @@ class WebModel:
         self.PREDICTION_ENDPOINT = f'{self.MODELS_ENDPOINT}/infer'
         self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
         self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
-        self.MODEL_LIST_ENDPOINT = f'{self.CLIENT_API_ROOT}/{self.project_id}/models'
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -263,13 +262,24 @@ class WebModel:
         self._save_metrics()
 
     @staticmethod
-    def get_model_names(api_token, project_name=None):
+    def get_model_names(api_token=None, project_name=None):
+        if project_name is None:
+            project_id = os.getenv('AITOMATIC_PROJECT_ID')
+        else:
+            project_id = get_project_id(project_name, api_token=api_token)
+
+        if api_token is None:
+            api_token = os.getenv('AITOMATIC_API_TOKEN')
+
+        _, client_api = get_api_root()
+        url = f'{client_api}/{project_id}/models'
+
         headers = {
             'authorization': api_token,
             'Content-Type': 'application/json',
             'accept': 'application/json',
         }
-        resp = requests.get(WebModel.MODEL_LIST_ENDPOINT, headers=headers)
+        resp = requests.get(url, headers=headers)
 
         # Handle request errors
         if resp.status_code != 200:

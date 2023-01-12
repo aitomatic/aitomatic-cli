@@ -10,14 +10,14 @@ API_TOKEN = os.getenv('AITOMATIC_API_TOKEN')
 class ModelBuilder:
 
     def __init__(self, project_name=None, api_token=None):
+        if api_token is None:
+            api_token = os.getenv('AITOMATIC_API_TOKEN')
+
         if project_name is None:
             project_name = os.getenv('AITOMATIC_PROJECT_NAME')
             project_id = os.getenv('AITOMATIC_PROJECT_ID')
         else:
-            project_id = get_project_id(project_name)
-
-        if api_token is None:
-            api_token = os.getenv('AITOMATIC_API_TOKEN')
+            project_id = get_project_id(project_name, api_token=api_token)
 
         self.project_name = project_name
         self.project_id = project_id
@@ -35,7 +35,6 @@ class ModelBuilder:
         self.KNOWLEDGE_DETAIL = lambda id_: f'{self.API_ROOT}/knowledges/' + id_
         self.MODEL_DETAIL = lambda id_: f'{self.API_ROOT}/models/' + id_
         self.MODEL_BUILD = f'{self.API_ROOT}/models'
-
 
     def build_model(self, model_type: str, model_name: str,
                     knowledge_set_name: str,
