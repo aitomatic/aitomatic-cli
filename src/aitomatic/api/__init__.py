@@ -41,7 +41,6 @@ def set_environment(aitomatic_environment: str=None, api_access_token: str=None,
         os.environ['AITOMATIC_PROJECT_ID'] = project_id
 
 
-
 def get_api_root(aitomatic_environment=None):
     if aitomatic_environment is None:
         aitomatic_environment = os.getenv('AITOMATIC_ENVIRONMENT')
