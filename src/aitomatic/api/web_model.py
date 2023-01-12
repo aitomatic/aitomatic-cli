@@ -9,7 +9,7 @@ import json
 import pandas as pd
 import numpy as np
 import logging
-from aitomatic.api import get_api_root
+from aitomatic.api import get_api_root, get_project_id
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -38,8 +38,12 @@ class WebModel:
 
         if project_name is None:
             project_name = os.getenv('AITOMATIC_PROJECT_NAME')
+            project_id = os.getenv('AITOMATIC_PROJECT_ID')
+        else:
+            project_id = get_project_id(project_name)
 
         self.project_name = project_name
+        self.project_id = project_id
         self.model_name = model_name
         self.api_token = api_token
         self.chunk_size = chunk_size * 1024 # convert from kb to bytes
@@ -52,11 +56,12 @@ class WebModel:
         self.init_endpoints()
 
     def init_endpoints(self):
-        self.API_ROOT, _ = get_api_root()
-        self.MODELS_ENDPOINT = f'{self.API_ROOT}/models'
+        self.MODEL_API_ROOT, self.CLIENT_API_ROOT = get_api_root()
+        self.MODELS_ENDPOINT = f'{self.MODEL_API_ROOT}/models'
         self.PREDICTION_ENDPOINT = f'{self.MODELS_ENDPOINT}/infer'
         self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
         self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
+        self.MODEL_LIST_ENDPOINT = f'{self.CLIENT_API_ROOT}/{self.project_id}/models'
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -260,15 +265,11 @@ class WebModel:
     @staticmethod
     def get_model_names(api_token, project_name=None):
         headers = {
-            'access-token': api_token,
+            'authorization': api_token,
             'Content-Type': 'application/json',
             'accept': 'application/json',
         }
-        if project_name is None:
-            resp = requests.get(WebModel.MODELS_ENDPOINT, headers=headers)
-        else:
-            resp = requests.get(WebModel.MODELS_ENDPOINT, headers=headers,
-                                params={'project_name': project_name})
+        resp = requests.get(WebModel.MODEL_LIST_ENDPOINT, headers=headers)
 
         # Handle request errors
         if resp.status_code != 200:
@@ -276,7 +277,7 @@ class WebModel:
             raise ConnectionError(err)
 
         resp_content = json.loads(resp.content)
-        return [x['name'] for x in resp_content['result']['models']]
+        return [x['name'] for x in resp_content]
 
 
 def convert_data_to_json(input_data: Dict) -> Tuple[Dict, Dict]:
