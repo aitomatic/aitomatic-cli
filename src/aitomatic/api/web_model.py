@@ -9,19 +9,10 @@ import json
 import pandas as pd
 import numpy as np
 import logging
+from aitomatic.api import get_api_root
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-AITO_ENV = os.getenv('AITOMATIC_ENVIRONMENT', 'staging')
-
-if AITO_ENV == 'dev':
-    API_ROOT = 'https://model-api-dev.platform.aitomatic.com'
-elif AITO_ENV == 'staging':
-    API_ROOT = 'https://model-api-stg.platform.aitomatic.com'
-elif AITO_ENV == 'production':
-    API_ROOT = 'https://model-api-prod.platform.aitomatic.com'
-
 
 
 class WebModel:
@@ -33,12 +24,8 @@ class WebModel:
     predictions = model.predict({'X': MyDataFrame})
     """
 
-    MODELS_ENDPOINT = f'{API_ROOT}/models'
-    PREDICTION_ENDPOINT = f'{MODELS_ENDPOINT}/infer'
-    METADATA_ENDPOINT = f'{MODELS_ENDPOINT}/metadata'
-    METRICS_ENDPOINT = f'{MODELS_ENDPOINT}/metrics'
-
-    def __init__(self, api_token, model_name, chunk_size=1024):
+    def __init__(self, model_name: str, api_token: str=None,
+                 project_name: str=None, chunk_size: int=1024):
         """
         Initialize remote model
 
@@ -46,6 +33,13 @@ class WebModel:
         :param model_name: name of the model being used
         :param chunk_size: size to chunk inference calls in kb
         """
+        if api_token is None:
+            api_token = os.getenv('AITOMATIC_API_TOKEN')
+
+        if project_name is None:
+            project_name = os.getenv('AITOMATIC_PROJECT_NAME')
+
+        self.project_name = project_name
         self.model_name = model_name
         self.api_token = api_token
         self.chunk_size = chunk_size * 1024 # convert from kb to bytes
@@ -55,6 +49,14 @@ class WebModel:
             'Content-Type': 'application/json',
             'accept': 'application/json',
         }
+        self.init_endpoints()
+
+    def init_endpoints(self):
+        self.API_ROOT, _ = get_api_root()
+        self.MODELS_ENDPOINT = f'{self.API_ROOT}/models'
+        self.PREDICTION_ENDPOINT = f'{self.MODELS_ENDPOINT}/infer'
+        self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
+        self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -158,6 +160,7 @@ class WebModel:
 
         # Create web request dicts
         request_data = {
+            'project_name': self.project_name,
             'model_name': self.model_name,
             'model_version': self.model_version,
             'input_data': json_data
@@ -218,7 +221,9 @@ class WebModel:
         resp = requests.get(
             self.METADATA_ENDPOINT,
             headers=self.headers,
-            params={'model_name': self.model_name, 'model_version': version},
+            params={'project_name': self.project_name,
+                    'model_name': self.model_name,
+                    'model_version': version},
         )
 
         # Handle request errors
@@ -233,6 +238,7 @@ class WebModel:
 
     def _save_metrics(self):
         payload = {
+            'project_name': self.project_name,
             'model_name': self.model_name,
             'model_version': self.model_version,
             'metrics': self.metrics
@@ -252,13 +258,17 @@ class WebModel:
         self._save_metrics()
 
     @staticmethod
-    def get_model_names(api_token):
+    def get_model_names(api_token, project_name=None):
         headers = {
             'access-token': api_token,
             'Content-Type': 'application/json',
             'accept': 'application/json',
         }
-        resp = requests.get(WebModel.MODELS_ENDPOINT, headers=headers)
+        if project_name is None:
+            resp = requests.get(WebModel.MODELS_ENDPOINT, headers=headers)
+        else:
+            resp = requests.get(WebModel.MODELS_ENDPOINT, headers=headers,
+                                params={'project_name': project_name})
 
         # Handle request errors
         if resp.status_code != 200:
