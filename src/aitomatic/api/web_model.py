@@ -9,7 +9,7 @@ import json
 import pandas as pd
 import numpy as np
 import logging
-from aitomatic.api import get_api_root, get_project_id
+from aitomatic.api.client import get_api_root, get_project_id
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -225,7 +225,7 @@ class WebModel:
         resp = requests.get(
             self.METADATA_ENDPOINT,
             headers=self.headers,
-            params={'project_name': self.project_name,
+            params={#'project_name': self.project_name,
                     'model_name': self.model_name,
                     'model_version': version},
         )
