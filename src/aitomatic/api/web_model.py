@@ -23,6 +23,8 @@ class WebModel:
     model = WebModel(API_TOKEN, "MyModelName").load_params()
     predictions = model.predict({'X': MyDataFrame})
     """
+    data_key = 'X'
+    output_key = 'predictions'
 
     def __init__(self, model_name: str, api_token: str=None,
                  project_name: str=None, chunk_size: int=1024):
@@ -69,8 +71,8 @@ class WebModel:
         # TODO: Make this more versatile to it slices all large data in input
         # data, not just 'X' ... maybe
 
-        X = input_data['X']
-        Xother = {k:deepcopy(v) for k,v in input_data.items() if k != 'X'}
+        X = input_data[self.data_key]
+        Xother = {k:deepcopy(v) for k,v in input_data.items() if k != self.data_key}
         size = sys.getsizeof(X)
         items = self.count_items(X)
         chunk_max = self.chunk_size
@@ -81,11 +83,11 @@ class WebModel:
                     f'{chunk_max /1024} kb or {N} data points')
         out = []
         for Xi in tqdm(self.slice_data(X, N), total=total_batches):
-            pred = self.predict({'X': Xi, **Xother})['predictions']
+            pred = self.predict({self.data_key: Xi, **Xother})[self.output_key]
             out.append(pred)
 
         predictions = self.merge_items(out, type(X))
-        return {'predictions': predictions}
+        return {self.output_key: predictions}
 
     def merge_items(self, items, dtype):
         """
@@ -147,12 +149,12 @@ class WebModel:
         :params input_data: input data for prediction, dictionary with data under key 'X'
         :return: a dictionary with key `predictions` containing the predictions
         """
-        if sys.getsizeof(input_data['X']) > self.chunk_size + 1:
+        if sys.getsizeof(input_data[self.data_key]) > self.chunk_size + 1:
             return self.batch_predict(input_data)
 
         # Convert data to JSON safe dict
         #json_data, types_dict = convert_data_to_json(input_data)
-        json_data, types_dict = convert_data_to_json(input_data['X'])
+        json_data, types_dict = convert_data_to_json(input_data[self.data_key])
 
         # TODO: change API input to take dict with {'input_data': {'X': data}}
         # so that A) models can take additional dict parameters if needed and
@@ -160,7 +162,7 @@ class WebModel:
         # user the same input type that they put in
 
         # TODO: remove this, after resolving API input format
-        types_dict['predictions']= type(input_data['X'])
+        types_dict[self.output_key]= type(input_data[self.data_key])
 
         # Create web request dicts
         request_data = {
