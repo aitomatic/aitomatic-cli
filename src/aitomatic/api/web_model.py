@@ -227,7 +227,7 @@ class WebModel:
         resp = requests.get(
             self.METADATA_ENDPOINT,
             headers=self.headers,
-            params={#'project_name': self.project_name,
+            params={'project_name': self.project_name,
                     'model_name': self.model_name,
                     'model_version': version},
         )
