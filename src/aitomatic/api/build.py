@@ -56,16 +56,14 @@ class ModelBuilder:
             'data_set_name': data_set_name,
             'model_params': model_params
         }
-        return payload
-    '''
         resp = self.project.make_request('post', self.MODEL_BUILD,
                                          json=payload)
         return resp
-    '''
 
-    def get_base_model_params(self, model_type: str, knowledge_set_name: str):
+    def get_base_model_params(self, model_type: str, knowledge_set_name: str, **kwargs):
         knowledge = self.project.get_knowledge(knowledge_set_name)
-        params = mp.K1STModelParams(model_type, knowledge_arl=knowledge)
+        params = mp.K1STModelParams(model_type, knowledge_arl=knowledge,
+                                    **kwargs)
         return params
 
     def is_model_name_unique(self, model_name: str):

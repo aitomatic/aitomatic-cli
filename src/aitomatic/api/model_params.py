@@ -97,7 +97,7 @@ class K1STModelParams(Params):
     def __init__(self, model_type: str, knowledge_arl: ARLHandler, **kwargs):
         super().__init__(model_type)
         self.model_type = model_type
-        defaults = K1ST_MODEL_DEFAULTS.get(model_type)
+        defaults = K1ST_MODEL_DEFAULTS.get(model_type, {}).copy()
         defaults.update(kwargs)
         self.ALLOWED_PARAMS = {}
         self.OUTPUT_KEYS = set()
@@ -206,6 +206,14 @@ MODEL_HYPER_PARAMS = {
         'n_estimators': (5, 100, int),
         'max_depth': (1,10, int),
         'eta': (0.001, 0.5, float)
+    },
+    'CNNClassifier': {
+        'n_classes': (2,30, int),
+        'classifier_activation': str,
+        'n_wrap': (1, 1000, int),
+        'learning_rate': (0.001, 0.5, float),
+        'batch_size': (1, 500, int),
+        'epochs': (1, 1e6, int),
     },
     'LogisticRegression': {},
     'RandomForest': {},
