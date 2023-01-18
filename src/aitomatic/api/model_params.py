@@ -57,7 +57,7 @@ class Params:
         setattr(self, key, value)
         self.OUTPUT_KEYS.add(key)
 
-    def add_all_hyperparms(self):
+    def add_all_hyperparams(self):
         for k in self.OUTPUT_KEYS:
             v = getattr(self, k)
             if isinstance(v, Params):
