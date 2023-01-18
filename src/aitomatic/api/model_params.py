@@ -61,9 +61,9 @@ class Params:
         for k in self.OUTPUT_KEYS:
             v = getattr(self, k)
             if isinstance(v, Params):
-                v.add_all_hyperparms()
+                v.add_all_hyperparams()
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], Params):
-                [x.add_all_hyperparms() for x in v]
+                [x.add_all_hyperparams() for x in v]
 
         for k,v in self.ALLOWED_PARAMS.items():
             if hasattr(self, k):
@@ -76,7 +76,7 @@ class Params:
                     # TODO: Choose default intelligently
                     set_v = v(ML[0])
 
-                set_v.add_all_hyperparms()
+                set_v.add_all_hyperparams()
             elif isinstance(v, type):
                 # if list or dict or str instantiate empty value
                 set_v = v()
@@ -161,8 +161,8 @@ class FuzzyParams(Params):
         super().__init__(model_type)
         self.knowledge = knowledge_arl
 
-    def add_all_hyperparms(self):
-        super().add_all_hyperparms()
+    def add_all_hyperparams(self):
+        super().add_all_hyperparams()
         membership_error = {}
         for feature, v in self.knowledge.features['features'].items():
             membership_error[feature] = {}
