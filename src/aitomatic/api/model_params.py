@@ -107,11 +107,14 @@ class K1STModelParams(Params):
             self.add_params_from_arl(knowledge_arl, **defaults)
 
     def dict(self):
-        out = super().dict()
-        for k in out.keys():
+        tmp = super().dict()
+        out = {}
+        for k in tmp.keys():
             k2 = self.renamed.get(k)
             if k2 is not None:
-                out[k2] = out.pop(k)
+                out[k2] = tmp[k]
+            else:
+                out[k] = tmp[k]
 
         return out
 
