@@ -33,7 +33,11 @@ def search_dict(x, key):
         if k == key:
             out[k] = v
         elif isinstance(k, tuple) and k[0] == key:
-            out[k[1:]] = v
+            tmp = k[1:]
+            if len(tmp) == 0:
+                out[k] = v
+            else:
+                out[k[1:]] = v
 
     return out
 
@@ -41,12 +45,16 @@ def apply_hyperparams_to_dict(params, to_apply):
     tmp_params = deepcopy(params)
     for k,v in params.items():
         subset = search_dict(to_apply, k)
-        if len(subset) == 1 and not isinstance(list(subset.values())[0], tuple):
+        if len(subset) == 1 and (not isinstance(list(subset.keys())[0], tuple)
+                                 or len(list(subset.keys())[0])):
             print(f'{k}: found value in to_appy: {subset}')
             tmp_params[k] = list(subset.values())[0]
         elif len(subset) > 0:
             print(f'{k}: diving down {subset}')
-            tmp_params[k] = apply_hyperparams_to_dict(v, subset)
+            if isinstance(v, dict):
+                tmp_params[k] = apply_hyperparams_to_dict(v, subset)
+            elif isinstance(v, list):
+                tmp_params[k] = [apply_hyperparams_to_dict(x, subset) for x in v]
         else:
             if isinstance(v, dict):
                 print(f'{k}: continuing')
