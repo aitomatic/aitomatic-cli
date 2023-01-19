@@ -37,7 +37,21 @@ def search_dict(x, key):
             if len(tmp) == 0:
                 out[k] = v
             else:
-                out[k[1:]] = v
+                out[tmp] = v
+
+    return out
+
+def search_list(x, key):
+    out = []
+    for k in x:
+        if k == key:
+            out.append(k)
+        elif isinstance(k, tuple) and k[0] == key:
+            tmp = k[1:]
+            if len(tmp) == 0:
+                out.append(k[0])
+            else:
+                out.append(tmp)
 
     return out
 
@@ -45,16 +59,21 @@ def apply_hyperparams_to_dict(params, to_apply):
     tmp_params = deepcopy(params)
     for k,v in params.items():
         subset = search_dict(to_apply, k)
-        if len(subset) == 1 and (not isinstance(list(subset.keys())[0], tuple)
-                                 or len(list(subset.keys())[0])):
+        if len(subset) == 1 and not isinstance(list(subset.keys())[0], tuple):
             print(f'{k}: found value in to_appy: {subset}')
             tmp_params[k] = list(subset.values())[0]
         elif len(subset) > 0:
+            if len(subset) == 1 and list(subset.keys())[0][0] == k:
+                print(f'{k}: found value in to_appy: {subset}')
+                tmp_params[k] = list(subset.values())[0]
+                continue
+
             print(f'{k}: diving down {subset}')
             if isinstance(v, dict):
                 tmp_params[k] = apply_hyperparams_to_dict(v, subset)
             elif isinstance(v, list):
                 tmp_params[k] = [apply_hyperparams_to_dict(x, subset) for x in v]
+
         else:
             if isinstance(v, dict):
                 print(f'{k}: continuing')
@@ -67,3 +86,48 @@ def apply_hyperparams_to_dict(params, to_apply):
                 print(f'{k}: passing')
 
     return tmp_params
+
+def drop_params_from_dict(params, to_drop):
+    tmp_params = deepcopy(params)
+    for k,v in params.items():
+        subset = search_list(to_drop, k)
+        if len(subset) == 1 and (not isinstance(subset[0], tuple) or
+                                 len(subset[0]) == 1):
+            if isinstance(subset[0], tuple):
+                drop_key = subset[0][0]
+            else:
+                drop_key = subset[0]
+
+            if drop_key == k:
+                tmp_params[drop_key] = {}
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                tmp = deepcopy(v)
+                for x in tmp:
+                    x[drop_key] = {}
+
+                tmp_params[k] = tmp
+            elif isinstance(v, dict):
+                tmp = deepcopy(v)
+                tmp[drop_key] = {}
+                tmp_params[k] = tmp
+
+        elif len(subset) > 0:
+            ones = [x for x in subset if len(x) == 1]
+            rest = [x for x in subset if len(x) > 1]
+            for x in ones:
+                tmp_params[k][x[0]] = {}
+
+            if isinstance(v, dict):
+                tmp_params[k] = drop_params_from_dict(v, )
+            elif isinstance(v, list):
+                tmp_params[k] = [drop_params_from_dict(x, subset) for x in v]
+        else:
+            if isinstance(v, dict):
+                tmp_params[k] = drop_params_from_dict(v, to_drop)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                tmp_params[k] = [drop_params_from_dict(x, to_drop) for x in v]
+            else:
+                print(f'{k}: passing')
+
+    return tmp_params
+
