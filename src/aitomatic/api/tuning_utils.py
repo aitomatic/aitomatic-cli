@@ -92,23 +92,27 @@ def drop_params_from_dict(params, to_drop):
                 drop_key = subset[0]
 
             if drop_key == k:
-                tmp_params[drop_key] = {}
+                tmp_params.pop(drop_key)
+                #tmp_params[drop_key] = {}
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                 tmp = deepcopy(v)
                 for x in tmp:
-                    x[drop_key] = {}
+                    x.pop(drop_key)
+                    #x[drop_key] = {}
 
                 tmp_params[k] = tmp
             elif isinstance(v, dict):
                 tmp = deepcopy(v)
-                tmp[drop_key] = {}
+                tmp.pop(drop_key)
+                #tmp[drop_key] = {}
                 tmp_params[k] = tmp
 
         elif len(subset) > 0:
             ones = [x for x in subset if len(x) == 1]
             rest = [x for x in subset if len(x) > 1]
             for x in ones:
-                tmp_params[k][x[0]] = {}
+                tmp_params[k].pop(x[0])
+                #tmp_params[k][x[0]] = {}
 
             if isinstance(v, dict):
                 tmp_params[k] = drop_params_from_dict(v, )
