@@ -60,15 +60,12 @@ def apply_hyperparams_to_dict(params, to_apply):
     for k,v in params.items():
         subset = search_dict(to_apply, k)
         if len(subset) == 1 and not isinstance(list(subset.keys())[0], tuple):
-            print(f'{k}: found value in to_appy: {subset}')
             tmp_params[k] = list(subset.values())[0]
         elif len(subset) > 0:
             if len(subset) == 1 and list(subset.keys())[0][0] == k:
-                print(f'{k}: found value in to_appy: {subset}')
                 tmp_params[k] = list(subset.values())[0]
                 continue
 
-            print(f'{k}: diving down {subset}')
             if isinstance(v, dict):
                 tmp_params[k] = apply_hyperparams_to_dict(v, subset)
             elif isinstance(v, list):
@@ -76,14 +73,10 @@ def apply_hyperparams_to_dict(params, to_apply):
 
         else:
             if isinstance(v, dict):
-                print(f'{k}: continuing')
                 tmp_params[k] = apply_hyperparams_to_dict(v, to_apply)
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
-                print(f'{k}: listing')
                 tmp_params[k] = [apply_hyperparams_to_dict(x, to_apply)
                                  for x in v]
-            else:
-                print(f'{k}: passing')
 
     return tmp_params
 
@@ -126,8 +119,6 @@ def drop_params_from_dict(params, to_drop):
                 tmp_params[k] = drop_params_from_dict(v, to_drop)
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                 tmp_params[k] = [drop_params_from_dict(x, to_drop) for x in v]
-            else:
-                print(f'{k}: passing')
 
     return tmp_params
 
