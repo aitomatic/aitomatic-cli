@@ -9,19 +9,10 @@ import json
 import pandas as pd
 import numpy as np
 import logging
+from aitomatic.api.client import get_api_root, get_project_id
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-AITO_ENV = os.getenv('AITOMATIC_ENVIRONMENT', 'staging')
-
-if AITO_ENV == 'dev':
-    API_ROOT = 'https://model-api-dev.platform.aitomatic.com'
-elif AITO_ENV == 'staging':
-    API_ROOT = 'https://model-api-stg.platform.aitomatic.com'
-elif AITO_ENV == 'production':
-    API_ROOT = 'https://model-api-prod.platform.aitomatic.com'
-
 
 
 class WebModel:
@@ -32,13 +23,11 @@ class WebModel:
     model = WebModel(API_TOKEN, "MyModelName").load_params()
     predictions = model.predict({'X': MyDataFrame})
     """
+    data_key = 'X'
+    output_key = 'predictions'
 
-    MODELS_ENDPOINT = f'{API_ROOT}/models'
-    PREDICTION_ENDPOINT = f'{MODELS_ENDPOINT}/infer'
-    METADATA_ENDPOINT = f'{MODELS_ENDPOINT}/metadata'
-    METRICS_ENDPOINT = f'{MODELS_ENDPOINT}/metrics'
-
-    def __init__(self, api_token, model_name, chunk_size=1024):
+    def __init__(self, model_name: str, api_token: str=None,
+                 project_name: str=None, chunk_size: int=1024):
         """
         Initialize remote model
 
@@ -46,6 +35,17 @@ class WebModel:
         :param model_name: name of the model being used
         :param chunk_size: size to chunk inference calls in kb
         """
+        if api_token is None:
+            api_token = os.getenv('AITOMATIC_API_TOKEN')
+
+        if project_name is None:
+            project_name = os.getenv('AITOMATIC_PROJECT_NAME')
+            project_id = os.getenv('AITOMATIC_PROJECT_ID')
+        else:
+            project_id = get_project_id(project_name, api_token=api_token)
+
+        self.project_name = project_name
+        self.project_id = project_id
         self.model_name = model_name
         self.api_token = api_token
         self.chunk_size = chunk_size * 1024 # convert from kb to bytes
@@ -55,6 +55,14 @@ class WebModel:
             'Content-Type': 'application/json',
             'accept': 'application/json',
         }
+        self.init_endpoints()
+
+    def init_endpoints(self):
+        self.MODEL_API_ROOT, self.CLIENT_API_ROOT = get_api_root()
+        self.MODELS_ENDPOINT = f'{self.MODEL_API_ROOT}/models'
+        self.PREDICTION_ENDPOINT = f'{self.MODELS_ENDPOINT}/infer'
+        self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
+        self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -63,8 +71,8 @@ class WebModel:
         # TODO: Make this more versatile to it slices all large data in input
         # data, not just 'X' ... maybe
 
-        X = input_data['X']
-        Xother = {k:deepcopy(v) for k,v in input_data.items() if k != 'X'}
+        X = input_data[self.data_key]
+        Xother = {k:deepcopy(v) for k,v in input_data.items() if k != self.data_key}
         size = sys.getsizeof(X)
         items = self.count_items(X)
         chunk_max = self.chunk_size
@@ -75,11 +83,11 @@ class WebModel:
                     f'{chunk_max /1024} kb or {N} data points')
         out = []
         for Xi in tqdm(self.slice_data(X, N), total=total_batches):
-            pred = self.predict({'X': Xi, **Xother})['predictions']
+            pred = self.predict({self.data_key: Xi, **Xother})[self.output_key]
             out.append(pred)
 
         predictions = self.merge_items(out, type(X))
-        return {'predictions': predictions}
+        return {self.output_key: predictions}
 
     def merge_items(self, items, dtype):
         """
@@ -141,12 +149,12 @@ class WebModel:
         :params input_data: input data for prediction, dictionary with data under key 'X'
         :return: a dictionary with key `predictions` containing the predictions
         """
-        if sys.getsizeof(input_data['X']) > self.chunk_size + 1:
+        if sys.getsizeof(input_data[self.data_key]) > self.chunk_size + 1:
             return self.batch_predict(input_data)
 
         # Convert data to JSON safe dict
         #json_data, types_dict = convert_data_to_json(input_data)
-        json_data, types_dict = convert_data_to_json(input_data['X'])
+        json_data, types_dict = convert_data_to_json(input_data[self.data_key])
 
         # TODO: change API input to take dict with {'input_data': {'X': data}}
         # so that A) models can take additional dict parameters if needed and
@@ -154,10 +162,11 @@ class WebModel:
         # user the same input type that they put in
 
         # TODO: remove this, after resolving API input format
-        types_dict['predictions']= type(input_data['X'])
+        types_dict[self.output_key]= type(input_data[self.data_key])
 
         # Create web request dicts
         request_data = {
+            'project_name': self.project_name,
             'model_name': self.model_name,
             'model_version': self.model_version,
             'input_data': json_data
@@ -218,7 +227,9 @@ class WebModel:
         resp = requests.get(
             self.METADATA_ENDPOINT,
             headers=self.headers,
-            params={'model_name': self.model_name, 'model_version': version},
+            params={'project_name': self.project_name,
+                    'model_name': self.model_name,
+                    'model_version': version},
         )
 
         # Handle request errors
@@ -233,6 +244,7 @@ class WebModel:
 
     def _save_metrics(self):
         payload = {
+            'project_name': self.project_name,
             'model_name': self.model_name,
             'model_version': self.model_version,
             'metrics': self.metrics
@@ -252,13 +264,24 @@ class WebModel:
         self._save_metrics()
 
     @staticmethod
-    def get_model_names(api_token):
+    def get_model_names(api_token=None, project_name=None):
+        if project_name is None:
+            project_id = os.getenv('AITOMATIC_PROJECT_ID')
+        else:
+            project_id = get_project_id(project_name, api_token=api_token)
+
+        if api_token is None:
+            api_token = os.getenv('AITOMATIC_API_TOKEN')
+
+        _, client_api = get_api_root()
+        url = f'{client_api}/{project_id}/models'
+
         headers = {
-            'access-token': api_token,
+            'authorization': api_token,
             'Content-Type': 'application/json',
             'accept': 'application/json',
         }
-        resp = requests.get(WebModel.MODELS_ENDPOINT, headers=headers)
+        resp = requests.get(url, headers=headers)
 
         # Handle request errors
         if resp.status_code != 200:
@@ -266,7 +289,7 @@ class WebModel:
             raise ConnectionError(err)
 
         resp_content = json.loads(resp.content)
-        return [x['name'] for x in resp_content['result']['models']]
+        return [x['name'] for x in resp_content]
 
 
 def convert_data_to_json(input_data: Dict) -> Tuple[Dict, Dict]:
