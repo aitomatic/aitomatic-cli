@@ -60,7 +60,7 @@ class WebModel:
     def init_endpoints(self):
         self.MODEL_API_ROOT, self.CLIENT_API_ROOT = get_api_root()
         self.MODELS_ENDPOINT = f'{self.MODEL_API_ROOT}/models'
-        self.PREDICTION_ENDPOINT = f'{self.MODELS_ENDPOINT}/infer'
+        self.PREDICTION_ENDPOINT = f'{self.MODEL_API_ROOT}/inferencing'
         self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
         self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
 
