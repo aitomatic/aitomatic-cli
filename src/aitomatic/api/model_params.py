@@ -176,7 +176,7 @@ class FuzzyParams(Params):
 
 
 K1ST_MODEL_DEFAULTS = {
-    'K-COLLABORATOR': {
+    'COLLABORATOR': {
         'knowledge': ['fuzzy'],
         'ml': ['XGBClassifier'],
         'ensemble': 'OR'
@@ -189,7 +189,7 @@ K1ST_MODEL_DEFAULTS = {
 }
 
 MODEL_HYPER_PARAMS = {
-    'K-COLLABORATOR': {
+    'COLLABORATOR': {
         'label_col': str,
         'knowledge': list,
         'ml': list,
