@@ -4,7 +4,7 @@ import requests
 from aitomatic.api.client import get_api_root, get_project_id, ProjectManager
 from aitomatic.api import model_params as mp 
 from aitomatic.dsl.arl_handler import ARLHandler
-
+from typing import List, Any, Dict, Optional
 
 API_TOKEN = os.getenv('AITOMATIC_API_TOKEN')
 
@@ -39,7 +39,9 @@ class ModelBuilder:
 
     def build_model(self, model_type: str, model_name: str,
                     knowledge_set_name: str,
-                    data_set_name: str, model_params: dict):
+                    data_set_name: str, model_params: dict, 
+                    ml_models: List[Any] = [], 
+                    label_columns: Dict[str, Optional[Any]] = {}):
         if model_type not in mp.K1ST:
             raise ValueError(f'Invalid K1st model type {model_type}. '
                              f'Must be in {mp.K1ST}')
@@ -54,7 +56,9 @@ class ModelBuilder:
             'model_name': model_name,
             'knowledge_set_name': knowledge_set_name,
             'data_set_name': data_set_name,
-            'model_params': model_params
+            'model_params': model_params,
+            'ml_models': ml_models,
+            'label_columns': label_columns
         }
         resp = self.project.make_request('post', self.MODEL_BUILD,
                                          json=payload)
