@@ -37,11 +37,15 @@ class ModelBuilder:
         params = model_input.get('model_params')
         return params
 
-    def build_model(self, model_type: str, model_name: str,
-                    knowledge_set_name: str,
-                    data_set_name: str, model_params: dict, 
-                    ml_models: List[Any] = [], 
-                    label_columns: Dict[str, Optional[Any]] = {}):
+    def build_model(
+        self, model_type: str, model_name: str,
+        knowledge_set_name: str,
+        data_set_name: str, model_params: dict, 
+        ml_models: List[Any] = [], 
+        label_columns: Dict[str, Optional[Any]] = {},
+        threshold: Any = {},
+        membership_error_width: Any = {}
+    ):
         if model_type not in mp.K1ST:
             raise ValueError(f'Invalid K1st model type {model_type}. '
                              f'Must be in {mp.K1ST}')
@@ -58,7 +62,9 @@ class ModelBuilder:
             'data_set_name': data_set_name,
             'model_params': model_params,
             'ml_models': ml_models,
-            'label_columns': label_columns
+            'label_columns': label_columns,
+            'threshold': threshold,
+            'membership_error_width': membership_error_width
         }
         resp = self.project.make_request('post', self.MODEL_BUILD,
                                          json=payload)
