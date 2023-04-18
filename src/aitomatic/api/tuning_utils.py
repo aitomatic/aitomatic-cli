@@ -1,3 +1,4 @@
+from itertools import product
 from copy import deepcopy
 from collections import deque
 
@@ -126,3 +127,12 @@ def drop_params_from_dict(params, to_drop):
 
     return tmp_params
 
+
+def generate_train_hyperparams(tuning_range: dict):
+        hyperparams = []
+        train_keys = tuning_range.keys()
+
+        for params in product(*tuning_range.values()):
+            hyperparams.append(dict(zip(train_keys, params)))
+            
+        return hyperparams, train_keys
