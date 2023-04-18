@@ -25,3 +25,7 @@ class Model:
     @property
     def metadata(self) -> dict:
         return self.knowledge_model.get('hyperparams', {}).get('feature_range', {})
+    
+    @property
+    def model_output(self) -> dict:
+        return self.raw_data.get('model_output', {})
