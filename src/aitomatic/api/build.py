@@ -44,7 +44,9 @@ class ModelBuilder:
         ml_models: List[Any] = [], 
         label_columns: Dict[str, Optional[Any]] = {},
         threshold: Any = {},
-        membership_error_width: Any = {}
+        membership_error_width: Any = {},
+        mapping_data: Any = None,
+        metadata: Any = None,
     ):
         if model_type not in mp.K1ST:
             raise ValueError(f'Invalid K1st model type {model_type}. '
@@ -64,7 +66,9 @@ class ModelBuilder:
             'ml_models': ml_models,
             'label_columns': label_columns,
             'threshold': threshold,
-            'membership_error_width': membership_error_width
+            'membership_error_width': membership_error_width,
+            'mapping_data': mapping_data,
+            'metadata': metadata
         }
         resp = self.project.make_request('post', self.MODEL_BUILD,
                                          json=payload)
