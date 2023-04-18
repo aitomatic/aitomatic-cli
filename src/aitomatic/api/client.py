@@ -5,12 +5,14 @@ from aitomatic.dsl.arl_handler import ARLHandler
 
 
 MODEL_API_ROOT = {
+    'local': 'http://localhost:8000/',
     'dev': 'https://model-api-dev.platform.aitomatic.com',
     'staging': 'https://model-api-stg.platform.aitomatic.com',
     'production': 'https://model-api-prod.platform.aitomatic.com',
 }
 
 CLIENT_API_ROOT = {
+    'local': 'http://localhost:8000/api/client',
     'dev': 'https://dev.platform.aitomatic.com/api/client',
     'staging': 'https://staging.platform.aitomatic.com/api/client',
     'production': 'https://production.platform.aitomatic.com/api/client',
@@ -122,7 +124,7 @@ class ProjectManager:
         return data
 
     def get_knowledge(self, knowledge_set_name: str) -> ARLHandler:
-        knowledge = self.get_knowledge_info(knowledge_set_name)['knowledges']
+        knowledge = self.get_knowledge_info(knowledge_set_name)['structured']
         return ARLHandler(knowledge)
 
     def get_knowledge_id(self, knowledge_set_name: str):
