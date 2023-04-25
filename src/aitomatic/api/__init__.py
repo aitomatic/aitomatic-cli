@@ -8,8 +8,11 @@ from aitomatic.api.client import get_project_id
 os.environ['AITOMATIC_ENVIRONMENT'] = 'staging'
 
 
-def set_environment(aitomatic_environment: str=None, api_access_token: str=None,
-                    project_name: str=None):
+def set_environment(
+    aitomatic_environment: str = None,
+    api_access_token: str = None,
+    project_name: str = None,
+):
     '''
     Sets various parameters so you don't need to keep adding them to api
     function calls
@@ -30,4 +33,3 @@ def set_environment(aitomatic_environment: str=None, api_access_token: str=None,
         os.environ['AITOMATIC_PROJECT_NAME'] = project_name
         project_id = get_project_id(project_name)
         os.environ['AITOMATIC_PROJECT_ID'] = project_id
-

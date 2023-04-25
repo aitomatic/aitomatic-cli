@@ -23,11 +23,17 @@ class WebModel:
     model = WebModel(API_TOKEN, "MyModelName").load_params()
     predictions = model.predict({'X': MyDataFrame})
     """
+
     data_key = 'X'
     output_key = 'predictions'
 
-    def __init__(self, model_name: str, api_token: str=None,
-                 project_name: str=None, chunk_size: int=1024):
+    def __init__(
+        self,
+        model_name: str,
+        api_token: str = None,
+        project_name: str = None,
+        chunk_size: int = 1024,
+    ):
         """
         Initialize remote model
 
@@ -48,7 +54,7 @@ class WebModel:
         self.project_id = project_id
         self.model_name = model_name
         self.api_token = api_token
-        self.chunk_size = chunk_size * 1024 # convert from kb to bytes
+        self.chunk_size = chunk_size * 1024  # convert from kb to bytes
         self.model_version = 'latest'
         self.headers = {
             'access-token': self.api_token,
@@ -72,15 +78,17 @@ class WebModel:
         # data, not just 'X' ... maybe
 
         X = input_data[self.data_key]
-        Xother = {k:deepcopy(v) for k,v in input_data.items() if k != self.data_key}
+        Xother = {k: deepcopy(v) for k, v in input_data.items() if k != self.data_key}
         size = sys.getsizeof(X)
         items = self.count_items(X)
         chunk_max = self.chunk_size
         spi = size / items
         N = int(chunk_max / spi) - 1
         total_batches = int(np.ceil(items / N))
-        logger.info(f'data size too large. Running inference in chunks of '
-                    f'{chunk_max /1024} kb or {N} data points')
+        logger.info(
+            f'data size too large. Running inference in chunks of '
+            f'{chunk_max /1024} kb or {N} data points'
+        )
         out = []
         for Xi in tqdm(self.slice_data(X, N), total=total_batches):
             pred = self.predict({self.data_key: Xi, **Xother})[self.output_key]
@@ -153,7 +161,7 @@ class WebModel:
             return self.batch_predict(input_data)
 
         # Convert data to JSON safe dict
-        #json_data, types_dict = convert_data_to_json(input_data)
+        # json_data, types_dict = convert_data_to_json(input_data)
         json_data, types_dict = convert_data_to_json(input_data[self.data_key])
 
         # TODO: change API input to take dict with {'input_data': {'X': data}}
@@ -162,14 +170,14 @@ class WebModel:
         # user the same input type that they put in
 
         # TODO: remove this, after resolving API input format
-        types_dict[self.output_key]= type(input_data[self.data_key])
+        types_dict[self.output_key] = type(input_data[self.data_key])
 
         # Create web request dicts
         request_data = {
             'project_name': self.project_name,
             'model_name': self.model_name,
             'model_version': self.model_version,
-            'input_data': json_data
+            'input_data': json_data,
         }
 
         # Convert data to json str (NpEncoder allows numpy array conversion)
@@ -177,9 +185,7 @@ class WebModel:
 
         # Make web request
         resp = requests.post(
-            self.PREDICTION_ENDPOINT,
-            headers=self.headers,
-            data=request_data
+            self.PREDICTION_ENDPOINT, headers=self.headers, data=request_data
         )
 
         # Handle request errors
@@ -194,9 +200,7 @@ class WebModel:
 
         # Convert response back to correct types
         # predictions format to match input_data['X'] format/types
-        predictions = convert_json_to_data(
-            resp_data['result'], types_dict
-        )
+        predictions = convert_json_to_data(resp_data['result'], types_dict)
 
         return predictions
 
@@ -227,9 +231,11 @@ class WebModel:
         resp = requests.get(
             self.METADATA_ENDPOINT,
             headers=self.headers,
-            params={'project_name': self.project_name,
-                    'model_name': self.model_name,
-                    'model_version': version},
+            params={
+                'project_name': self.project_name,
+                'model_name': self.model_name,
+                'model_version': version,
+            },
         )
 
         # Handle request errors
@@ -247,13 +253,9 @@ class WebModel:
             'project_name': self.project_name,
             'model_name': self.model_name,
             'model_version': self.model_version,
-            'metrics': self.metrics
+            'metrics': self.metrics,
         }
-        resp = requests.post(
-            self.METRICS_ENDPOINT,
-            headers=self.headers,
-            json=payload
-        )
+        resp = requests.post(self.METRICS_ENDPOINT, headers=self.headers, json=payload)
 
         if resp.status_code != 200:
             err = f'{resp.status_code}: {resp.content}'
@@ -339,7 +341,7 @@ def convert_json_to_data(json_data: Dict, types_dict: Dict) -> Dict:
     if isinstance(json_data, str):
         json_data = json.loads(json_data)
 
-    for k,v in json_data.items():
+    for k, v in json_data.items():
         goal_type = types_dict.get(k, pd.DataFrame)
         if goal_type == pd.DataFrame or goal_type == pd.Series:
             out_data[k] = goal_type(eval(v))
@@ -360,4 +362,3 @@ class NpEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return super(NpEncoder, self).default(obj)
-
