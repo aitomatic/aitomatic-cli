@@ -20,6 +20,7 @@ CLIENT_API_ROOT = {
     'production': 'https://production.platform.aitomatic.com/api/client',
 }
 
+
 def get_api_root(aitomatic_environment=None):
     if aitomatic_environment is None:
         aitomatic_environment = os.getenv('AITOMATIC_ENVIRONMENT')
@@ -29,7 +30,7 @@ def get_api_root(aitomatic_environment=None):
     return model_api_root, client_api_root
 
 
-def get_project_id(project_name: str, api_token: str=None):
+def get_project_id(project_name: str, api_token: str = None):
     if api_token is None:
         api_token = os.getenv('AITOMATIC_API_TOKEN')
 
@@ -41,11 +42,7 @@ def get_project_id(project_name: str, api_token: str=None):
         'accept': 'application/json',
     }
     data = {'project_name': project_name}
-    resp = requests.post(
-        url,
-        headers=headers,
-        json=data
-    )
+    resp = requests.post(url, headers=headers, json=data)
     # Handle request errors
     if resp.status_code != 200:
         err = f'{resp.status_code}: {resp.content}'
@@ -55,9 +52,9 @@ def get_project_id(project_name: str, api_token: str=None):
     id_ = resp_content['id']
     return id_
 
-class ProjectManager:
 
-    def __init__(self, project_name: str=None, api_token: str=None):
+class ProjectManager:
+    def __init__(self, project_name: str = None, api_token: str = None):
         if api_token is None:
             api_token = os.getenv('AITOMATIC_API_TOKEN')
 
@@ -94,8 +91,7 @@ class ProjectManager:
 
     def get_model_id(self, model_name: str):
         model_list = self.make_request('get', self.MODELS_LIST)
-        id_ = [x['id'] for x in model_list
-               if x['name'].lower() == model_name.lower()]
+        id_ = [x['id'] for x in model_list if x['name'].lower() == model_name.lower()]
         if len(id_) == 0:
             raise ValueError(f'model {model_name} not found.')
 
@@ -109,8 +105,7 @@ class ProjectManager:
 
     def get_data_id(self, data_name: str):
         data_list = self.make_request('get', self.DATA_LIST)
-        id_ = [x['id'] for x in data_list
-               if x['name'].lower() == data_name.lower()]
+        id_ = [x['id'] for x in data_list if x['name'].lower() == data_name.lower()]
         if len(id_) == 0:
             raise ValueError(f'Dataset {data_name} not found.')
 
@@ -132,19 +127,23 @@ class ProjectManager:
         return ARLHandler(knowledge)
 
     def get_knowledge_id(self, knowledge_set_name: str):
-        knowledges = make_request('get', self.KNOWLEDGE_LIST,
-                                  headers=self.headers)
-        id_ = [x['id'] for x in knowledges
-               if x['name'].lower() == knowledge_set_name.lower()]
+        knowledges = make_request('get', self.KNOWLEDGE_LIST, headers=self.headers)
+        id_ = [
+            x['id']
+            for x in knowledges
+            if x['name'].lower() == knowledge_set_name.lower()
+        ]
         if len(id_) == 0:
             raise ValueError(f'knowledge set {knowledge_set_name} not found.')
 
         return id_[0]
-    
+
     # TODO: Move to model builder class
-    def get_default_membership_error_widths(self, model: Model, dataset: Dataset, knowledge: ARLHandler):
+    def get_default_membership_error_widths(
+        self, model: Model, dataset: Dataset, knowledge: ARLHandler
+    ):
         error_widths = {}
-        
+
         if len(model.schema_mapping.keys()) > 0:
             metadata = model.metadata
         else:
@@ -160,14 +159,14 @@ class ProjectManager:
             # max_ = metadata[col]['max']
             for cls, rng in classes.items():
                 if not error_widths.get(feat):
-                    error_widths[feat] = {}                
+                    error_widths[feat] = {}
                 error_widths[feat][cls] = 1
 
         return error_widths
-    
-    def get_base_column_mapping(self, knowledge: ARLHandler):
+
+    def get_base_conclusion_mapping(self, knowledge: ARLHandler):
         return {k: None for k in knowledge.conclusions.get('conclusions', {}).keys()}
-    
+
     def get_base_metadata(self, dataset: Dataset, model: Model):
         schema_mapping = model.schema_mapping
 
@@ -183,8 +182,9 @@ class ProjectManager:
 def make_request(request_type: str, url: str, **kwargs):
     func = getattr(requests, request_type)
     if func is None:
-        raise ValueError(f'Invalid request type {request_type}. '
-                         f'Must be get, post or put')
+        raise ValueError(
+            f'Invalid request type {request_type}. ' f'Must be get, post or put'
+        )
 
     resp = func(url, **kwargs)
     # Handle request errors

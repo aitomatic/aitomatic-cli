@@ -78,7 +78,7 @@ class ARLHandler:
 
         self.arl_str = arl_str
 
-    def  parse_handler_sections(self):
+    def parse_handler_sections(self):
         self.features = ARLFeatures(self.arl_dict['features']).feature_dict
         self.rules = ARLRules(self.features, self.arl_dict['rules']).rule_dict
         self.conclusions = ARLConclusions(
@@ -94,8 +94,9 @@ class ARLHandler:
             raise ValueError(f'Conclusion {conclusion} not found')
 
         out = {}
-        conc_str = ARLConclusions(self.features, self.rules,
-                                  self.arl_dict['conclusions']).conclusion_str
+        conc_str = ARLConclusions(
+            self.features, self.rules, self.arl_dict['conclusions']
+        ).conclusion_str
 
         for line in conc_str.splitlines():
             if line.startswith(conclusion):
@@ -103,4 +104,3 @@ class ARLHandler:
                 return ARLHandler(ARLHandler.convert_arl_str_to_dict(new_arl))
 
         raise ValueError(f'Unable to parse out conclusion {conclusion}')
-

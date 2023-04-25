@@ -1,16 +1,14 @@
 import os
-import json
-import requests
-from aitomatic.api.client import get_api_root, get_project_id, ProjectManager
-from aitomatic.api import model_params as mp 
-from aitomatic.dsl.arl_handler import ARLHandler
+import time
+import pandas as pd
+from aitomatic.api.client import get_api_root, ProjectManager
+from aitomatic.api import model_params as mp
 from typing import List, Any, Dict, Optional
 
 API_TOKEN = os.getenv('AITOMATIC_API_TOKEN')
 
 
 class ModelBuilder:
-
     def __init__(self, project_name=None, api_token=None):
         if api_token is None:
             api_token = os.getenv('AITOMATIC_API_TOKEN')
@@ -18,8 +16,7 @@ class ModelBuilder:
         if project_name is None:
             project_name = os.getenv('AITOMATIC_PROJECT_NAME')
 
-        self.project = ProjectManager(project_name=project_name,
-                                      api_token=api_token)
+        self.project = ProjectManager(project_name=project_name, api_token=api_token)
         self.headers = {
             'accept': 'application/json',
             'authorization': api_token,
@@ -38,10 +35,12 @@ class ModelBuilder:
         return params
 
     def build_model(
-        self, model_type: str, model_name: str,
+        self,
+        model_type: str,
+        model_name: str,
         knowledge_set_name: str,
-        data_set_name: str, model_params: dict, 
-        ml_models: List[Any] = [], 
+        data_set_name: str,
+        ml_models: List[Any] = [],
         label_columns: Dict[str, Optional[Any]] = {},
         threshold: Any = {},
         membership_error_width: Any = {},
@@ -49,12 +48,15 @@ class ModelBuilder:
         metadata: Any = None,
     ):
         if model_type not in mp.K1ST:
-            raise ValueError(f'Invalid K1st model type {model_type}. '
-                             f'Must be in {mp.K1ST}')
+            raise ValueError(
+                f'Invalid K1st model type {model_type}. ' f'Must be in {mp.K1ST}'
+            )
 
         if not self.is_model_name_unique(model_name):
-            raise ValueError(f'model_name not unique. '
-                             f'model_name must be unique to build new model')
+            raise ValueError(
+                f'model_name not unique. '
+                f'model_name must be unique to build new model'
+            )
 
         payload = {
             'model_type': model_type,
@@ -62,22 +64,20 @@ class ModelBuilder:
             'model_name': model_name,
             'knowledge_set_name': knowledge_set_name,
             'data_set_name': data_set_name,
-            'model_params': model_params,
+            'model_params': {},
             'ml_models': ml_models,
             'label_columns': label_columns,
             'threshold': threshold,
             'membership_error_width': membership_error_width,
             'mapping_data': mapping_data,
-            'metadata': metadata
+            'metadata': metadata,
         }
-        resp = self.project.make_request('post', self.MODEL_BUILD,
-                                         json=payload)
+        resp = self.project.make_request('post', self.MODEL_BUILD, json=payload)
         return resp
 
     def get_base_model_params(self, model_type: str, knowledge_set_name: str, **kwargs):
         knowledge = self.project.get_knowledge(knowledge_set_name)
-        params = mp.K1STModelParams(model_type, knowledge_arl=knowledge,
-                                    **kwargs)
+        params = mp.K1STModelParams(model_type, knowledge_arl=knowledge, **kwargs)
         return params
 
     def is_model_name_unique(self, model_name: str):
@@ -87,3 +87,113 @@ class ModelBuilder:
         except ValueError:
             return True
 
+    def tune_model_with_hyperparams(
+        self,
+        tuning_params: List[Any],
+        base_name: str,
+        model_type: str,
+        knowledge_name: str,
+        data_name: str,
+        mapping_data: Any,
+        label_columns: Any,
+        metadata: Any,
+    ) -> pd.DataFrame:
+
+        model_log = []
+        print('Creating training jobs')
+        for i, item in enumerate(tuning_params):
+            test_params = {**item}
+            model_name = f'{base_name} {i}'
+            resp = self.build_model(
+                model_type,
+                model_name,
+                knowledge_name,
+                data_name,
+                mapping_data=mapping_data,
+                label_columns=label_columns,
+                metadata=metadata,
+                **item,
+            )
+            print(f'Training model {model_name}: {resp["id"]}')
+            test_params['id'] = resp['id']
+            test_params['model_name'] = model_name
+            model_log.append(test_params)
+        model_df = pd.DataFrame(model_log)
+        model_df['status'] = 'training'
+        return model_df
+
+    def check_model_status(self, model_name):
+        try:
+            model_info = self.project.get_model_info(model_name)
+            return model_info.status.lower()
+        except Exception as e:
+            print('Checking model status, e =', e)
+            return 'training'
+
+    def wait_for_tuning_to_complete(self, model_df: pd.DataFrame, sleep_time: int = 30):
+        print('Waiting for training jobs to complete')
+        while True:
+            for i, row in model_df.iterrows():
+                model_name = row['model_name']
+                status = self.check_model_status(model_name)
+                model_df.loc[i, 'status'] = status
+            if model_df['status'].isin(['training']).any():
+                success_length = len(model_df[model_df['status'] == 'success'])
+                error_length = len(model_df[model_df['status'] == 'error'])
+                df_length = len(model_df)
+                print(
+                    f'Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]'
+                )
+                time.sleep(sleep_time)
+            else:
+                break
+        return model_df
+
+
+class MLModelBuilder:
+    def build_xgb_param(
+        self,
+        n_estimators: int = 3,
+        threshold: float = 0.5,
+        max_depth: int = 4,
+        eta: float = 0.001,
+    ):
+        return {
+            'type': 'XGBClassifier',
+            'hyperparams': {
+                'n_estimators': n_estimators,
+                'threshold': threshold,
+                'max_depth': max_depth,
+                'eta': eta,
+            },
+        }
+
+    def builld_logistic_regression_param(
+        self,
+        # threshold: float = 0.5,
+        # C: float = 1.0,
+        # penalty: str = 'l2'
+    ):
+        return {
+            'type': 'LogisticRegression',
+            'hyperparams': {
+                # 'threshold': threshold,
+                # 'C': C,
+                # 'penalty': penalty,
+            },
+        }
+
+    def build_random_forest_param(
+        self,
+        # n_estimators: int = 3,
+        # threshold: float = 0.5,
+        # max_depth: int = 4
+    ):
+        return {
+            'type': 'RandomForestClassifier',
+            'hyperparams': {
+                # 'n_estimators': n_estimators,
+                # 'threshold': threshold,
+                # 'max_depth': max_depth,
+            },
+        }
