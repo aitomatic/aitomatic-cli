@@ -137,13 +137,14 @@ class ModelBuilder:
                 model_name = row['model_name']
                 status = self.check_model_status(model_name)
                 model_df.loc[i, 'status'] = status
+            
+            success_length = len(model_df[model_df['status'] == 'success'])
+            error_length = len(model_df[model_df['status'] == 'error'])
+            df_length = len(model_df)
+            print(
+                f'Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]'
+            )
             if model_df['status'].isin(['training']).any():
-                success_length = len(model_df[model_df['status'] == 'success'])
-                error_length = len(model_df[model_df['status'] == 'error'])
-                df_length = len(model_df)
-                print(
-                    f'Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]'
-                )
                 time.sleep(sleep_time)
             else:
                 break
