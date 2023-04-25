@@ -2,6 +2,7 @@ import random
 import json
 from aitomatic.dsl.arl_handler import ARLHandler
 
+
 class Params:
     def __init__(self, model_type: str, **kwargs):
         self.OUTPUT_KEYS = set(['model_type'])
@@ -10,7 +11,7 @@ class Params:
             raise ValueError(f'Invalid model_type')
 
         self.model_type = model_type
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             if k in self.ALLOWED_PARAMS:
                 self.add_param(k, v)
 
@@ -36,23 +37,29 @@ class Params:
 
     def add_param(self, key, value):
         if key not in self.ALLOWED_PARAMS:
-            raise ValueError(f'parameter not allowed for model_type '
-                             f'{self.model_type}')
+            raise ValueError(
+                f'parameter not allowed for model_type ' f'{self.model_type}'
+            )
 
         allowed_value = self.ALLOWED_PARAMS.get(key)
-        if (isinstance(allowed_value, tuple) and
-                isinstance(allowed_value[0], (int, float))):
+        if isinstance(allowed_value, tuple) and isinstance(
+            allowed_value[0], (int, float)
+        ):
             # Check if value is in range
             if not isinstance(value, allowed_value[-1]):
-                raise TypeError(f'Invalid value type. Value must be {allowed_value[-1]}')
+                raise TypeError(
+                    f'Invalid value type. Value must be {allowed_value[-1]}'
+                )
 
             if value < allowed_value[0] or value > allowed_value[1]:
-                raise ValueError(f'Value outside allowed parameter range: '
-                                 f'{allowed_value}.')
+                raise ValueError(
+                    f'Value outside allowed parameter range: ' f'{allowed_value}.'
+                )
 
         elif isinstance(allowed_value, type) and not isinstance(value, allowed_value):
-            raise TypeError(f'Expecting type {allowed_value}, got type '
-                            f'{type(value)}')
+            raise TypeError(
+                f'Expecting type {allowed_value}, got type ' f'{type(value)}'
+            )
 
         setattr(self, key, value)
         self.OUTPUT_KEYS.add(key)
@@ -65,7 +72,7 @@ class Params:
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], Params):
                 [x.add_all_hyperparams() for x in v]
 
-        for k,v in self.ALLOWED_PARAMS.items():
+        for k, v in self.ALLOWED_PARAMS.items():
             if hasattr(self, k):
                 continue
 
@@ -85,7 +92,7 @@ class Params:
                 min_ = v[0]
                 max_ = v[1]
                 if v[2] == float:
-                    set_v = round(random.random()*(max_ - min_) + min_, 3)
+                    set_v = round(random.random() * (max_ - min_) + min_, 3)
                 elif v[2] == int:
                     set_v = random.randint(min_, max_)
 
@@ -93,7 +100,6 @@ class Params:
 
 
 class K1STModelParams(Params):
-
     def __init__(self, model_type: str, knowledge_arl: ARLHandler, **kwargs):
         super().__init__(model_type)
         self.model_type = model_type
@@ -121,13 +127,13 @@ class K1STModelParams(Params):
     def add_params_from_arl(self, arl: ARLHandler, **kwargs):
         for conclusion in arl.conclusions['conclusions'].keys():
             params = get_param_class(self.model_type, knowledge_arl=arl)
-            for k,v in kwargs.items():
+            for k, v in kwargs.items():
                 allowed = params.ALLOWED_PARAMS.get(k)
                 if allowed is None:
                     raise ValueError(f'Invalid parameter {k}')
 
                 if isinstance(allowed, str) and isinstance(v, str):
-                    params.add_param(k,v)
+                    params.add_param(k, v)
                 elif isinstance(v, list):
                     v_params = [get_param_class(x, knowledge_arl=arl) for x in v]
                     params.add_param(k, v_params)
@@ -138,21 +144,21 @@ class K1STModelParams(Params):
             if ' ' in conclusion:
                 old_name = conclusion
                 conclusion = conclusion.replace(' ', '_')
-                self.renamed[conclusion] = old_name 
+                self.renamed[conclusion] = old_name
 
             self.ALLOWED_PARAMS[conclusion] = Params
             self.add_param(conclusion, params)
 
     def get_conclusion_params(self, conclusion):
         if conclusion in self.renamed.values():
-            conclusion = [k for k,v in self.renamed.items()
-                          if v == conclusion]
+            conclusion = [k for k, v in self.renamed.items() if v == conclusion]
             if len(conclusion) == 0:
                 raise ValueError('Conclusion not found')
 
             conclusion = conclusion[0]
 
         return getattr(self, conclusion)
+
 
 def get_param_class(model_type, **kwargs):
     params = MODEL_PARAMS.get(model_type, Params)
@@ -176,16 +182,12 @@ class FuzzyParams(Params):
 
 
 K1ST_MODEL_DEFAULTS = {
-    'COLLABORATOR': {
-        'knowledge': ['fuzzy'],
-        'ml': ['XGBClassifier'],
-        'ensemble': 'OR'
-    },
+    'COLLABORATOR': {'knowledge': ['fuzzy'], 'ml': ['XGBClassifier'], 'ensemble': 'OR'},
     'ORACLE': {
         'teacher': ['fuzzy'],
         'students': ['LogisticRegression', 'RandomForest'],
         'ensemble': 'MajorityVoting',
-    }
+    },
 }
 
 MODEL_HYPER_PARAMS = {
@@ -195,23 +197,16 @@ MODEL_HYPER_PARAMS = {
         'ml': list,
         'ensemble': Params,
     },
-    'ORACLE': {
-        'teacher': list,
-        'students': list,
-        'ensemble': Params,
-    },
-    'fuzzy': {
-        'threshold': (0,1, float),
-        'membership_error_width': dict,
-    },
+    'ORACLE': {'teacher': list, 'students': list, 'ensemble': Params},
+    'fuzzy': {'threshold': (0, 1, float), 'membership_error_width': dict},
     'XGBClassifier': {
         'threshold': (0, 1, float),
         'n_estimators': (5, 100, int),
-        'max_depth': (1,10, int),
-        'eta': (0.001, 0.5, float)
+        'max_depth': (1, 10, int),
+        'eta': (0.001, 0.5, float),
     },
     'CNNClassifier': {
-        'n_classes': (2,30, int),
+        'n_classes': (2, 30, int),
         'classifier_activation': str,
         'n_wrap': (1, 1000, int),
         'learning_rate': (0.001, 0.5, float),
@@ -221,7 +216,7 @@ MODEL_HYPER_PARAMS = {
     'LogisticRegression': {},
     'RandomForest': {},
     'OR': {},
-    'MajorityVoting': {}
+    'MajorityVoting': {},
 }
 
 ENSEMBLE = ['OR', 'MajorityVoting']
@@ -235,4 +230,3 @@ MODEL_PARAMS = {
     #'K-COLLABORATOR': CollaboratorParams,
     'fuzzy': FuzzyParams
 }
-
