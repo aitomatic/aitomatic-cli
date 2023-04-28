@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Dict, Tuple, Union, List
+from typing import Dict, Tuple, Union, List, Any
 
 from tqdm import tqdm
 from itertools import chain
@@ -9,7 +9,9 @@ import json
 import pandas as pd
 import numpy as np
 import logging
-from aitomatic.api.client import get_api_root, get_project_id
+from aitomatic.api.client import get_api_root, get_project_id, ProjectManager
+from aitomatic.api.build import ModelBuilder
+from aitomatic.api.tuning_utils import generate_train_hyperparams
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -69,6 +71,9 @@ class WebModel:
         self.PREDICTION_ENDPOINT = f'{self.MODEL_API_ROOT}/inferencing'
         self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
         self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
+
+        self.KNOWLEDGE_DETAIL = lambda id_: f'{self.CLIENT_API_ROOT}/knowledges/' + id_
+        self.DATA_DETAIL = lambda id_: f'{self.CLIENT_API_ROOT}/data/' + id_
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -246,7 +251,35 @@ class WebModel:
         resp_data = json.loads(resp.content)
         self.stats = resp_data['result']['stats']
         self.metrics = resp_data['result']['metrics']
+
+        manager = ProjectManager(
+            project_name=self.project_name, api_token=self.api_token
+        )
+        self.model_info = manager.get_model_info(self.model_name)
+        self.knowledge = manager.get_knowledge(
+            self.model_info.structured_knowledge_name
+        )
         return self
+
+    def tune_with_hyperparams(
+        self, tuning_params: List[Any], base_name: str = None, data_name: str = None
+    ):
+        model_builder = ModelBuilder()
+        if not base_name:
+            base_name = self.model_name
+        model_df = model_builder.tune_model_with_hyperparams(
+            tuning_params=tuning_params,
+            base_name=base_name,
+            model_type=self.model_info.architect,
+            knowledge_name=self.model_info.structured_knowledge_name,
+            # TODO: Check data name then use the correct ones
+            data_name=self.model_info.data_name,
+            mapping_data=self.model_info.schema_mapping,
+            label_columns=self.model_info.label_columns_mapping,
+            metadata=self.model_info.metadata,
+        )
+
+        return model_df
 
     def _save_metrics(self):
         payload = {
@@ -362,3 +395,27 @@ class NpEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return super(NpEncoder, self).default(obj)
+
+
+def tune_model(
+    project_name: str,
+    base_model: str,
+    conclusion_tuning_range: List[Any],
+    ml_tuning_params: dict,
+    output_model_df_path,
+    wait_for_tuning_to_complete=bool,
+    prefix: str = "finetune",
+):
+    model = WebModel(model_name=base_model, project_name=project_name)
+    model.load()
+    TUNING_RANGES = {
+        'threshold': conclusion_tuning_range,
+        'ml_models': ml_tuning_params,
+    }
+    tuning_params, train_keys = generate_train_hyperparams(TUNING_RANGES)
+    builder = ModelBuilder()
+    base_name = f'{prefix} - {base_model}'
+    model_df = model.tune_with_hyperparams(tuning_params, base_name=base_name)
+    model_df.to_parquet(output_model_df_path)
+    if wait_for_tuning_to_complete:
+        builder.wait_for_tuning_to_complete(model_df, 10)
