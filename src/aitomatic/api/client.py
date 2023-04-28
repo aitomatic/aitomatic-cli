@@ -87,7 +87,8 @@ class ProjectManager:
         id_ = self.get_model_id(model_name)
         resp = self.make_request('get', self.MODEL_DETAIL(id_))
         if resp:
-            return Model(resp)
+            model = Model(resp)
+            return model
 
     def get_model_id(self, model_name: str):
         model_list = self.make_request('get', self.MODELS_LIST)
@@ -139,30 +140,6 @@ class ProjectManager:
         return id_[0]
 
     # TODO: Move to model builder class
-    def get_default_membership_error_widths(
-        self, model: Model, dataset: Dataset, knowledge: ARLHandler
-    ):
-        error_widths = {}
-
-        if len(model.schema_mapping.keys()) > 0:
-            metadata = model.metadata
-        else:
-            metadata = dataset.metadata
-
-        for feat, classes in knowledge.features['features'].items():
-            col = feat
-            if model.schema_mapping.get(feat) is not None:
-                col = model.schema_mapping[feat]
-
-            # Make all options for 1 conclusion model
-            # min_ = metadata[col]['min']
-            # max_ = metadata[col]['max']
-            for cls, rng in classes.items():
-                if not error_widths.get(feat):
-                    error_widths[feat] = {}
-                error_widths[feat][cls] = 1
-
-        return error_widths
 
     def get_base_conclusion_mapping(self, knowledge: ARLHandler):
         return {k: None for k in knowledge.conclusions.get('conclusions', {}).keys()}
