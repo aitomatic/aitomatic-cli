@@ -1,6 +1,7 @@
 import os
 import sys
 from typing import Dict, Tuple, Union, List, Any
+from itertools import product
 
 from tqdm import tqdm
 from itertools import chain
@@ -10,7 +11,7 @@ import pandas as pd
 import numpy as np
 import logging
 from aitomatic.api.client import get_api_root, get_project_id, ProjectManager
-from aitomatic.api.build import ModelBuilder
+from aitomatic.api.build import ModelBuilder, MLParamBuilder
 from aitomatic.api.tuning_utils import generate_train_hyperparams
 
 logger = logging.getLogger(__name__)
@@ -261,6 +262,34 @@ class WebModel:
         )
         return self
 
+    def generate_ml_model_params(
+        self, current_ml_model_params: List[Dict], model_params: Dict
+    ) -> Dict:
+        """
+        Generate model parameters for ML model
+        Based on current ml model params, it will generate list of ML models (combination)
+        """
+
+        ml_params_builder = MLParamBuilder()
+
+        # generate combination of model_params
+
+        for key in model_params.keys():
+            model_ranges, _ = generate_train_hyperparams(model_params[key])
+            model_params[key]['tuning_ranges'] = [
+                ml_params_builder.build_with_type(model_type=key, **model)
+                for model in model_ranges
+            ]
+
+        ranges = []
+        for ml_model in current_ml_model_params:
+            if not model_params[ml_model.get('type')]:
+                # if model types not configured, use current hyperparams
+                ranges.append([ml_model])
+                continue
+            ranges.append(model_params[ml_model.get('type')]['tuning_ranges'])
+        return [list(item) for item in list(product(*ranges))]
+
     def tune_with_hyperparams(
         self, tuning_params: List[Any], base_name: str = None, data_name: str = None
     ):
@@ -400,7 +429,7 @@ class NpEncoder(json.JSONEncoder):
 def tune_model(
     project_name: str,
     base_model: str,
-    conclusion_tuning_range: List[Any],
+    conclusion_tuning_range: dict,
     ml_tuning_params: dict,
     output_model_df_path,
     wait_for_tuning_to_complete=bool,
@@ -408,14 +437,27 @@ def tune_model(
 ):
     model = WebModel(model_name=base_model, project_name=project_name)
     model.load()
-    TUNING_RANGES = {
-        'threshold': conclusion_tuning_range,
-        'ml_models': ml_tuning_params,
-    }
-    tuning_params, train_keys = generate_train_hyperparams(TUNING_RANGES)
+
+    # build ml tuning ranges
+    ml_ranges = model.generate_ml_model_params(
+        model.model_info.ml_models, ml_tuning_params
+    )
+
+    # build conclusion threshold tuning ranges
+    conclusion_threshold_ranges, _ = generate_train_hyperparams(
+        conclusion_tuning_range
+    )
+
+    TUNING_RANGES = {'threshold': conclusion_threshold_ranges, 'ml_models': ml_ranges}
+    tuning_params, _ = generate_train_hyperparams(TUNING_RANGES)
+
     builder = ModelBuilder()
     base_name = f'{prefix} - {base_model}'
     model_df = model.tune_with_hyperparams(tuning_params, base_name=base_name)
-    model_df.to_parquet(output_model_df_path)
+    try:
+        model_df.to_parquet(output_model_df_path)
+    except Exception as e:
+        print(f'Failed to save model_df to {output_model_df_path}')
+        print(e)
     if wait_for_tuning_to_complete:
         builder.wait_for_tuning_to_complete(model_df, 10)

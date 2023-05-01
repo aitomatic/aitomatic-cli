@@ -35,6 +35,10 @@ class Model:
         return self.submodel.get('knowledge_model', {})
 
     @property
+    def ml_models(self) -> dict:
+        return self.submodel.get('ml_models', [])
+
+    @property
     def metadata(self) -> dict:
         return self.knowledge_model.get('hyperparams', {}).get('feature_range', {})
 
