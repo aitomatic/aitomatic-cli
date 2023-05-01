@@ -223,3 +223,13 @@ class MLParamBuilder:
                 # 'max_depth': max_depth,
             },
         }
+
+    def build_with_type(self, model_type: str, **kwargs):
+        if model_type == 'XGBClassifier':
+            return self.build_xgb_param(**kwargs)
+        elif model_type == 'LogisticRegression':
+            return self.builld_logistic_regression_param(**kwargs)
+        elif model_type == 'RandomForestClassifier':
+            return self.build_random_forest_param(**kwargs)
+        else:
+            raise ValueError(f'Unknown model type: {model_type}')
