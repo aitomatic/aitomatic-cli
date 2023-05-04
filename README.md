@@ -12,7 +12,7 @@ The WebModel library is a tool for building, tuning, and inference of models tha
 The WebModel library can be installed using pip:
 
 ```bash
-pip install aitomatic==1.2.1 -i https://test.pypi.org/simple/ 
+pip install 'aitomatic>=1.2.0' -i https://test.pypi.org/simple/ 
 ```
 ## Quick Start
 To get started, you can create a WebModel object by passing in the model name and API token:
@@ -50,16 +50,15 @@ The `WebModel` class provides several methods for working with the model:
   ```python
   model.load()
   ```
-  __Return__ the model with loaded params 
+    * __Return__ the model with loaded params 
 
 * **Predict**
 The `predict` method takes a dictionary as input with the data you want to make predictions on. The input data should be a pandas DataFrame, Series, or numpy array with the key "X". The method returns a dictionary with the predictions, with the key "predictions".
   ```python
   response = model.predict(input_data={'X': df})
   ```
-  * input_data: input data for prediction, dictionary with data under key 'X'
-  __Return__
-  Result of the prediction call in a dictionary where the actual result is under `prediction` key
+  * `input_data`: input data for prediction, dictionary with data under key 'X'
+  * __Return__: result of the prediction call in a dictionary where the actual result is under `prediction` key
 
 * **Tuning**
   `tune_model` is a statis method to generate multiple versions of a given model with the set of input params
@@ -83,11 +82,14 @@ The `predict` method takes a dictionary as input with the data you want to make 
   * `wait_for_tuning_to_complete`: A boolean specifying whether to wait for the tuning process
   to complete before returning. Default is True.
   * `prefix`: A string containing a prefix to add to the name of the new model. Default is "finetune".
-  __Return__
-  A Pandas DataFrame containing the hyperparameters and performance of the tuned model.
+  * __Return__ A Pandas DataFrame containing the hyperparameters and performance of the tuned model.
 
 
 * **Log model metrics**
+  `log_metrics` is to save the model metric after evaluation
+  ```python
+  model.log_metrics("accuracy", 0.95)
+  ```
 
 * **Get models in project `static`**
   ```python
