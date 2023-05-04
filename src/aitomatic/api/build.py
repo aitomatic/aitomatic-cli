@@ -3,6 +3,7 @@ import time
 import pandas as pd
 from aitomatic.api.client import get_api_root, ProjectManager
 from aitomatic.api import model_params as mp
+from aitomatic.dsl.arl_handler import ARLHandler
 from typing import List, Any, Dict, Optional
 
 API_TOKEN = os.getenv('AITOMATIC_API_TOKEN')
@@ -87,6 +88,30 @@ class ModelBuilder:
         except ValueError:
             return True
 
+    def get_default_membership_error_widths(self, knowledge: ARLHandler):
+        error_widths = {}
+
+        for feat, classes in knowledge.features['features'].items():
+            # Make all options for 1 conclusion model
+            # min_ = metadata[col]['min']
+            # max_ = metadata[col]['max']
+            for cls, rng in classes.items():
+                if not error_widths.get(feat):
+                    error_widths[feat] = {}
+                error_widths[feat][cls] = 1
+
+        return error_widths
+
+    def build_threshold_param_by_ranges(
+        self, knowledge: ARLHandler, threshold_ranges: List[float]
+    ):
+        conclusions = knowledge.conclusions.get('conclusions', {}).keys()
+        conclusion_threshold_hyperparms = [
+            {k: value for k in conclusions} for value in threshold_ranges
+        ]
+
+        return conclusion_threshold_hyperparms
+
     def tune_model_with_hyperparams(
         self,
         tuning_params: List[Any],
@@ -137,7 +162,7 @@ class ModelBuilder:
                 model_name = row['model_name']
                 status = self.check_model_status(model_name)
                 model_df.loc[i, 'status'] = status
-            
+
             success_length = len(model_df[model_df['status'] == 'success'])
             error_length = len(model_df[model_df['status'] == 'error'])
             df_length = len(model_df)
@@ -151,7 +176,7 @@ class ModelBuilder:
         return model_df
 
 
-class MLModelBuilder:
+class MLParamBuilder:
     def build_xgb_param(
         self,
         n_estimators: int = 3,
@@ -198,3 +223,13 @@ class MLModelBuilder:
                 # 'max_depth': max_depth,
             },
         }
+
+    def build_with_type(self, model_type: str, **kwargs):
+        if model_type == 'XGBClassifier':
+            return self.build_xgb_param(**kwargs)
+        elif model_type == 'LogisticRegression':
+            return self.builld_logistic_regression_param(**kwargs)
+        elif model_type == 'RandomForestClassifier':
+            return self.build_random_forest_param(**kwargs)
+        else:
+            raise ValueError(f'Unknown model type: {model_type}')
