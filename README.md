@@ -98,30 +98,3 @@ The `predict` method takes a dictionary as input with the data you want to make 
   * The `api_token` A string containing the access token for the Aitomatic API. If not provided, the AITOMATIC_API_TOKEN environment variable will be used.
   * The `project_name` A string containing the name of the Aitomatic project to use. If not provided, the AITOMATIC_PROJECT_ID environment variable will be used.
   __Return__ a list of the names of all models in the specified project.
-  
-
-
-
-# Load sample dataset
-data = pd.read_csv("sample_data.csv")
-
-# Initialize WebModel object
-model = WebModel("MyModelName", api_token="YOUR_API_TOKEN")
-
-# Load model parameters
-model.load()
-
-# Make predictions on sample data
-predictions = model.predict({"X": data})
-Here's an example of using the log_metrics method to log custom metrics:
-
-python
-Copy code
-# Log custom metric for model accuracy
-model.log_metrics("accuracy", 0.95)
-Here's an example of using the get_model_names method to retrieve a list of model names for a given project:
-
-python
-Copy code
-# Retrieve list of model names for a given project
-model_names = WebModel.get_model_names(api_token="YOUR_API_TOKEN", project_name="MyProject")
