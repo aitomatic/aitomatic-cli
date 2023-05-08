@@ -1,11 +1,12 @@
 import re
+from typing import List
 
 
 def str_to_var(x: str):
-    '''
+    """
     cleans string to create python safe variable name
-    '''
-    return re.sub('\W|^(?=\d)', '_', x)
+    """
+    return re.sub("\W|^(?=\d)", "_", x)
 
 
 def str_to_value(x: str):
@@ -13,8 +14,8 @@ def str_to_value(x: str):
     convert numeric types to numbers and string literals to strings
     """
     undefined = False
-    float_fmt = '^\-?\d+\.?\d*$'
-    str_literal_fmt = '^\".+\"$'
+    float_fmt = "^\-?\d+\.?\d*$"
+    str_literal_fmt = '^".+"$'
     if x.startswith('"') and x.endswith('"'):
         # if is string literal
         y = eval(x)
@@ -32,7 +33,7 @@ def str_to_value(x: str):
     return y, undefined
 
 
-def get_str_order(vals: list[str]):
+def get_str_order(vals: List[str]):
     """
     order list so that no earlier item is a substring of a later item
     """
