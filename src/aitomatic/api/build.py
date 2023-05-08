@@ -5,42 +5,43 @@ from aitomatic.api.client import get_api_root, ProjectManager
 from aitomatic.api import model_params as mp
 from aitomatic.dsl.arl_handler import ARLHandler
 from typing import List, Any, Dict, Optional
+from aitomatic.objects.dataset import Dataset
 
-API_TOKEN = os.getenv('AITOMATIC_API_TOKEN')
+API_TOKEN = os.getenv("AITOMATIC_API_TOKEN")
 
 
 class ModelBuilder:
     def __init__(self, project_name=None, api_token=None):
         if api_token is None:
-            api_token = os.getenv('AITOMATIC_API_TOKEN')
+            api_token = os.getenv("AITOMATIC_API_TOKEN")
 
         if project_name is None:
-            project_name = os.getenv('AITOMATIC_PROJECT_NAME')
+            project_name = os.getenv("AITOMATIC_PROJECT_NAME")
 
         self.project = ProjectManager(project_name=project_name, api_token=api_token)
         self.headers = {
-            'accept': 'application/json',
-            'authorization': api_token,
-            'conent-type': 'application/json',
+            "accept": "application/json",
+            "authorization": api_token,
+            "conent-type": "application/json",
         }
         self.init_endpoints()
 
     def init_endpoints(self):
         _, self.API_ROOT = get_api_root()
-        self.MODEL_BUILD = f'{self.API_ROOT}/models'
+        self.MODEL_BUILD = f"{self.API_ROOT}/models"
 
     def get_existing_model_params(self, model_name: str):
         resp = self.project.get_model_info(model_name)
-        model_input = resp['model_input']
-        params = model_input.get('model_params')
+        model_input = resp["model_input"]
+        params = model_input.get("model_params")
         return params
 
     def build_model(
         self,
         model_type: str,
         model_name: str,
-        knowledge_set_name: str,
-        data_set_name: str,
+        knowledge_name: str,
+        data_name: str,
         ml_models: List[Any] = [],
         label_columns: Dict[str, Optional[Any]] = {},
         threshold: Any = {},
@@ -50,30 +51,40 @@ class ModelBuilder:
     ):
         if model_type not in mp.K1ST:
             raise ValueError(
-                f'Invalid K1st model type {model_type}. ' f'Must be in {mp.K1ST}'
+                f"Invalid K1st model type {model_type}. " f"Must be in {mp.K1ST}"
             )
 
         if not self.is_model_name_unique(model_name):
             raise ValueError(
-                f'model_name not unique. '
-                f'model_name must be unique to build new model'
+                f"model_name not unique. "
+                f"model_name must be unique to build new model"
             )
 
+        # if label columns is empty, get from knowledge
+        if not bool(label_columns):
+            if model_type == "ORACLE":
+                knowledge = self.project.get_knowledge(knowledge_name)
+                label_columns = {k: None for k in knowledge.conclusions["conclusions"]}
+            elif model_type == "COLLABORATOR":
+                raise ValueError("Please specify label_columns for COLLABORATOR model")
+            else:
+                raise ValueError(f"Invalid model_type {model_type}")
+
         payload = {
-            'model_type': model_type,
-            'project': self.project.project_name,
-            'model_name': model_name,
-            'knowledge_set_name': knowledge_set_name,
-            'data_set_name': data_set_name,
-            'model_params': {},
-            'ml_models': ml_models,
-            'label_columns': label_columns,
-            'threshold': threshold,
-            'membership_error_width': membership_error_width,
-            'mapping_data': mapping_data,
-            'metadata': metadata,
+            "model_type": model_type,
+            "project": self.project.project_name,
+            "model_name": model_name,
+            "knowledge_set_name": knowledge_name,
+            "data_set_name": data_name,
+            "model_params": {},
+            "ml_models": ml_models,
+            "label_columns": label_columns,
+            "threshold": threshold,
+            "membership_error_width": membership_error_width,
+            "mapping_data": mapping_data,
+            "metadata": metadata,
         }
-        resp = self.project.make_request('post', self.MODEL_BUILD, json=payload)
+        resp = self.project.make_request("post", self.MODEL_BUILD, json=payload)
         return resp
 
     def get_base_model_params(self, model_type: str, knowledge_set_name: str, **kwargs):
@@ -91,7 +102,7 @@ class ModelBuilder:
     def get_default_membership_error_widths(self, knowledge: ARLHandler):
         error_widths = {}
 
-        for feat, classes in knowledge.features['features'].items():
+        for feat, classes in knowledge.features["features"].items():
             # Make all options for 1 conclusion model
             # min_ = metadata[col]['min']
             # max_ = metadata[col]['max']
@@ -105,7 +116,7 @@ class ModelBuilder:
     def build_threshold_param_by_ranges(
         self, knowledge: ARLHandler, threshold_ranges: List[float]
     ):
-        conclusions = knowledge.conclusions.get('conclusions', {}).keys()
+        conclusions = knowledge.conclusions.get("conclusions", {}).keys()
         conclusion_threshold_hyperparms = [
             {k: value for k in conclusions} for value in threshold_ranges
         ]
@@ -123,12 +134,11 @@ class ModelBuilder:
         label_columns: Any,
         metadata: Any,
     ) -> pd.DataFrame:
-
         model_log = []
-        print('Creating training jobs')
+        print("Creating training jobs")
         for i, item in enumerate(tuning_params):
             test_params = {**item}
-            model_name = f'{base_name} {i}'
+            model_name = f"{base_name} {i}"
             resp = self.build_model(
                 model_type,
                 model_name,
@@ -140,11 +150,11 @@ class ModelBuilder:
                 **item,
             )
             print(f'Training model {model_name}: {resp["id"]}')
-            test_params['id'] = resp['id']
-            test_params['model_name'] = model_name
+            test_params["id"] = resp["id"]
+            test_params["model_name"] = model_name
             model_log.append(test_params)
         model_df = pd.DataFrame(model_log)
-        model_df['status'] = 'training'
+        model_df["status"] = "training"
         return model_df
 
     def check_model_status(self, model_name):
@@ -152,28 +162,36 @@ class ModelBuilder:
             model_info = self.project.get_model_info(model_name)
             return model_info.status.lower()
         except Exception as e:
-            print('Checking model status, e =', e)
-            return 'training'
+            print("Checking model status, e =", e)
+            return "training"
 
     def wait_for_tuning_to_complete(self, model_df: pd.DataFrame, sleep_time: int = 30):
-        print('Waiting for training jobs to complete')
+        print("Waiting for training jobs to complete")
         while True:
             for i, row in model_df.iterrows():
-                model_name = row['model_name']
+                model_name = row["model_name"]
                 status = self.check_model_status(model_name)
-                model_df.loc[i, 'status'] = status
+                model_df.loc[i, "status"] = status
 
-            success_length = len(model_df[model_df['status'] == 'success'])
-            error_length = len(model_df[model_df['status'] == 'error'])
+            success_length = len(model_df[model_df["status"] == "success"])
+            error_length = len(model_df[model_df["status"] == "error"])
             df_length = len(model_df)
             print(
-                f'Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]'
+                f"Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]"
             )
-            if model_df['status'].isin(['training']).any():
+            if model_df["status"].isin(["training"]).any():
                 time.sleep(sleep_time)
             else:
                 break
         return model_df
+
+    def get_metadata(seft, data: Dataset, mapping_column: dict):
+        metadata = {}
+        dataset_metadata = data.metadata
+        for key, value in mapping_column.items():
+            if value in dataset_metadata:
+                metadata[key] = dataset_metadata[value]
+        return metadata
 
 
 class MLParamBuilder:
@@ -185,12 +203,12 @@ class MLParamBuilder:
         eta: float = 0.001,
     ):
         return {
-            'type': 'XGBClassifier',
-            'hyperparams': {
-                'n_estimators': n_estimators,
-                'threshold': threshold,
-                'max_depth': max_depth,
-                'eta': eta,
+            "type": "XGBClassifier",
+            "hyperparams": {
+                "n_estimators": n_estimators,
+                "threshold": threshold,
+                "max_depth": max_depth,
+                "eta": eta,
             },
         }
 
@@ -201,8 +219,8 @@ class MLParamBuilder:
         # penalty: str = 'l2'
     ):
         return {
-            'type': 'LogisticRegression',
-            'hyperparams': {
+            "type": "LogisticRegression",
+            "hyperparams": {
                 # 'threshold': threshold,
                 # 'C': C,
                 # 'penalty': penalty,
@@ -216,8 +234,8 @@ class MLParamBuilder:
         # max_depth: int = 4
     ):
         return {
-            'type': 'RandomForestClassifier',
-            'hyperparams': {
+            "type": "RandomForestClassifier",
+            "hyperparams": {
                 # 'n_estimators': n_estimators,
                 # 'threshold': threshold,
                 # 'max_depth': max_depth,
@@ -225,11 +243,11 @@ class MLParamBuilder:
         }
 
     def build_with_type(self, model_type: str, **kwargs):
-        if model_type == 'XGBClassifier':
+        if model_type == "XGBClassifier":
             return self.build_xgb_param(**kwargs)
-        elif model_type == 'LogisticRegression':
+        elif model_type == "LogisticRegression":
             return self.builld_logistic_regression_param(**kwargs)
-        elif model_type == 'RandomForestClassifier':
+        elif model_type == "RandomForestClassifier":
             return self.build_random_forest_param(**kwargs)
         else:
-            raise ValueError(f'Unknown model type: {model_type}')
+            raise ValueError(f"Unknown model type: {model_type}")

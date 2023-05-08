@@ -444,9 +444,7 @@ def tune_model(
     )
 
     # build conclusion threshold tuning ranges
-    conclusion_threshold_ranges, _ = generate_train_hyperparams(
-        conclusion_tuning_range
-    )
+    conclusion_threshold_ranges, _ = generate_train_hyperparams(conclusion_tuning_range)
 
     TUNING_RANGES = {'threshold': conclusion_threshold_ranges, 'ml_models': ml_ranges}
     tuning_params, _ = generate_train_hyperparams(TUNING_RANGES)
