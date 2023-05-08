@@ -43,7 +43,7 @@
    aito
    ```
 
-## Steps to package and distribute CLI to TestPyPI
+## Steps to package and distribute CLI to PyPI
 
 1. Install `build` to generate distribution packages and `twine` to distribute package to PyPI
    ```shell
@@ -58,28 +58,21 @@
 
    After that command, we will have `tar.gz` and `.whl` files in `dist` folder
 
-3. Register an account in TestPyPI and create an API token with `Entire account` scope
+3. Register an account in PyPI and create an API token with `Entire account` scope
 4. Using twine to upload the distribution packages created in step 2 to TestPyPI
 
    ```shell
-   twine upload --repository testpypi --skip-existing dist/*
+   twine upload --skip-existing dist/*
    ```
 
-   `--repository` used to choose upload to PyPI or TestPyPI, `--skip-existing` if we want to distribute further versions of the cli.
+   `--skip-existing` if we want to distribute further versions of the cli.
 
    You will be prompted for a username and password. For the username, use `__token__`. For the password, use the token value, including the pypi- prefix.
 
-5. Using another virtual environment and install the `aitomatic-cli` using pip to verify that it works
+5. Using another virtual environment and install the `aitomatic` using pip to verify that it works
    ```shell
    deactivate
    virtualenv .venv-test -p python3
    source .venv-test/bin/activate
-   pip3 install aitomatic -i https://test.pypi.org/simple/
+   pip3 install aitomatic
    ```
-
-## Steps to package and distribute CLI to PyPI
-
-Similar to steps to distribute to TestPyPI, except:
-
-- Don't need to specify `--repository` when running twine command
-- Don't need to specify `-i` when running pip install command
