@@ -15,7 +15,7 @@ The WebModel library is a tool for building, tuning, and inference of models tha
 The WebModel library can be installed using pip:
 
 ```bash
-pip install 'aitomatic>=1.2.0' -i https://test.pypi.org/simple/
+pip install 'aitomatic>=1.2.0' --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple
 ```
 
 ## Quick Start
