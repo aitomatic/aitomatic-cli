@@ -27,8 +27,8 @@ class WebModel:
     predictions = model.predict({'X': MyDataFrame})
     """
 
-    data_key = 'X'
-    output_key = 'predictions'
+    data_key = "X"
+    output_key = "predictions"
 
     def __init__(
         self,
@@ -45,11 +45,11 @@ class WebModel:
         :param chunk_size: size to chunk inference calls in kb
         """
         if api_token is None:
-            api_token = os.getenv('AITOMATIC_API_TOKEN')
+            api_token = os.getenv("AITOMATIC_API_TOKEN")
 
         if project_name is None:
-            project_name = os.getenv('AITOMATIC_PROJECT_NAME')
-            project_id = os.getenv('AITOMATIC_PROJECT_ID')
+            project_name = os.getenv("AITOMATIC_PROJECT_NAME")
+            project_id = os.getenv("AITOMATIC_PROJECT_ID")
         else:
             project_id = get_project_id(project_name, api_token=api_token)
 
@@ -58,23 +58,23 @@ class WebModel:
         self.model_name = model_name
         self.api_token = api_token
         self.chunk_size = chunk_size * 1024  # convert from kb to bytes
-        self.model_version = 'latest'
+        self.model_version = "latest"
         self.headers = {
-            'access-token': self.api_token,
-            'Content-Type': 'application/json',
-            'accept': 'application/json',
+            "access-token": self.api_token,
+            "Content-Type": "application/json",
+            "accept": "application/json",
         }
         self.init_endpoints()
 
     def init_endpoints(self):
         self.MODEL_API_ROOT, self.CLIENT_API_ROOT = get_api_root()
-        self.MODELS_ENDPOINT = f'{self.MODEL_API_ROOT}/models'
-        self.PREDICTION_ENDPOINT = f'{self.MODEL_API_ROOT}/inferencing'
-        self.METADATA_ENDPOINT = f'{self.MODELS_ENDPOINT}/metadata'
-        self.METRICS_ENDPOINT = f'{self.MODELS_ENDPOINT}/metrics'
+        self.MODELS_ENDPOINT = f"{self.MODEL_API_ROOT}/models"
+        self.PREDICTION_ENDPOINT = f"{self.MODEL_API_ROOT}/inferencing"
+        self.METADATA_ENDPOINT = f"{self.MODELS_ENDPOINT}/metadata"
+        self.METRICS_ENDPOINT = f"{self.MODELS_ENDPOINT}/metrics"
 
-        self.KNOWLEDGE_DETAIL = lambda id_: f'{self.CLIENT_API_ROOT}/knowledges/' + id_
-        self.DATA_DETAIL = lambda id_: f'{self.CLIENT_API_ROOT}/data/' + id_
+        self.KNOWLEDGE_DETAIL = lambda id_: f"{self.CLIENT_API_ROOT}/knowledges/" + id_
+        self.DATA_DETAIL = lambda id_: f"{self.CLIENT_API_ROOT}/data/" + id_
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -92,8 +92,8 @@ class WebModel:
         N = int(chunk_max / spi) - 1
         total_batches = int(np.ceil(items / N))
         logger.info(
-            f'data size too large. Running inference in chunks of '
-            f'{chunk_max /1024} kb or {N} data points'
+            f"data size too large. Running inference in chunks of "
+            f"{chunk_max /1024} kb or {N} data points"
         )
         out = []
         for Xi in tqdm(self.slice_data(X, N), total=total_batches):
@@ -118,13 +118,13 @@ class WebModel:
         elif dtype == pd.DataFrame or dtype == pd.Series:
             return pd.concat(items, axis=0)
         else:
-            raise NotImplementedError(f'Data type {str(type)} not supported')
+            raise NotImplementedError(f"Data type {str(type)} not supported")
 
     def count_items(self, X: Union[np.ndarray, pd.Series, pd.DataFrame, Dict, List]):
         """
         Count items in dataset
         """
-        if hasattr(X, 'shape'):
+        if hasattr(X, "shape"):
             return X.shape[0]
 
         return len(X)
@@ -180,10 +180,10 @@ class WebModel:
 
         # Create web request dicts
         request_data = {
-            'project_name': self.project_name,
-            'model_name': self.model_name,
-            'model_version': self.model_version,
-            'input_data': json_data,
+            "project_name": self.project_name,
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "input_data": json_data,
         }
 
         # Convert data to json str (NpEncoder allows numpy array conversion)
@@ -196,17 +196,17 @@ class WebModel:
 
         # Handle request errors
         if resp.status_code != 200:
-            err = f'{resp.status_code}: {resp.content}'
+            err = f"{resp.status_code}: {resp.content}"
             raise ConnectionError(err)
 
         resp_content = json.loads(resp.content)
         # resp_data = resp_content['result']
         resp_data = resp_content
-        result_file_path = resp_content['result_file_path']
+        result_file_path = resp_content["result_file_path"]
 
         # Convert response back to correct types
         # predictions format to match input_data['X'] format/types
-        predictions = convert_json_to_data(resp_data['result'], types_dict)
+        predictions = convert_json_to_data(resp_data["result"], types_dict)
 
         return predictions
 
@@ -219,10 +219,10 @@ class WebModel:
     def persist(self, version: str) -> str:
         raise NotImplementedError()
 
-    def load_params(self, *args, **kwargs) -> 'WebModel':
+    def load_params(self, *args, **kwargs) -> "WebModel":
         return self.load(*args, **kwargs)
 
-    def load(self, version: str = 'latest') -> 'WebModel':
+    def load(self, version: str = "latest") -> "WebModel":
         """
         load model parameters for usage
 
@@ -238,20 +238,20 @@ class WebModel:
             self.METADATA_ENDPOINT,
             headers=self.headers,
             params={
-                'project_name': self.project_name,
-                'model_name': self.model_name,
-                'model_version': version,
+                "project_name": self.project_name,
+                "model_name": self.model_name,
+                "model_version": version,
             },
         )
 
         # Handle request errors
         if resp.status_code != 200:
-            err = f'{resp.status_code}: {resp.content}'
+            err = f"{resp.status_code}: {resp.content}"
             raise ConnectionError(err)
 
         resp_data = json.loads(resp.content)
-        self.stats = resp_data['result']['stats']
-        self.metrics = resp_data['result']['metrics']
+        self.stats = resp_data["result"]["stats"]
+        self.metrics = resp_data["result"]["metrics"]
 
         manager = ProjectManager(
             project_name=self.project_name, api_token=self.api_token
@@ -276,18 +276,18 @@ class WebModel:
 
         for key in model_params.keys():
             model_ranges, _ = generate_train_hyperparams(model_params[key])
-            model_params[key]['tuning_ranges'] = [
+            model_params[key]["tuning_ranges"] = [
                 ml_params_builder.build_with_type(model_type=key, **model)
                 for model in model_ranges
             ]
 
         ranges = []
         for ml_model in current_ml_model_params:
-            if not model_params[ml_model.get('type')]:
+            if not model_params[ml_model.get("type")]:
                 # if model types not configured, use current hyperparams
                 ranges.append([ml_model])
                 continue
-            ranges.append(model_params[ml_model.get('type')]['tuning_ranges'])
+            ranges.append(model_params[ml_model.get("type")]["tuning_ranges"])
         return [list(item) for item in list(product(*ranges))]
 
     def tune_with_hyperparams(
@@ -312,15 +312,15 @@ class WebModel:
 
     def _save_metrics(self):
         payload = {
-            'project_name': self.project_name,
-            'model_name': self.model_name,
-            'model_version': self.model_version,
-            'metrics': self.metrics,
+            "project_name": self.project_name,
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "metrics": self.metrics,
         }
         resp = requests.post(self.METRICS_ENDPOINT, headers=self.headers, json=payload)
 
         if resp.status_code != 200:
-            err = f'{resp.status_code}: {resp.content}'
+            err = f"{resp.status_code}: {resp.content}"
             raise ConnectionError(err)
 
     def log_metrics(self, key, value):
@@ -330,30 +330,30 @@ class WebModel:
     @staticmethod
     def get_model_names(api_token=None, project_name=None):
         if project_name is None:
-            project_id = os.getenv('AITOMATIC_PROJECT_ID')
+            project_id = os.getenv("AITOMATIC_PROJECT_ID")
         else:
             project_id = get_project_id(project_name, api_token=api_token)
 
         if api_token is None:
-            api_token = os.getenv('AITOMATIC_API_TOKEN')
+            api_token = os.getenv("AITOMATIC_API_TOKEN")
 
         _, client_api = get_api_root()
-        url = f'{client_api}/{project_id}/models'
+        url = f"{client_api}/{project_id}/models"
 
         headers = {
-            'authorization': api_token,
-            'Content-Type': 'application/json',
-            'accept': 'application/json',
+            "authorization": api_token,
+            "Content-Type": "application/json",
+            "accept": "application/json",
         }
         resp = requests.get(url, headers=headers)
 
         # Handle request errors
         if resp.status_code != 200:
-            err = f'{resp.status_code}: {resp.content}'
+            err = f"{resp.status_code}: {resp.content}"
             raise ConnectionError(err)
 
         resp_content = json.loads(resp.content)
-        return [x['name'] for x in resp_content]
+        return [x["name"] for x in resp_content]
 
 
 def convert_data_to_json(input_data: Dict) -> Tuple[Dict, Dict]:
@@ -364,9 +364,9 @@ def convert_data_to_json(input_data: Dict) -> Tuple[Dict, Dict]:
     # This segment is here when passing input_data['X'] instead of input_data
     # TODO: remove this after API is updated
     if isinstance(input_data, (pd.DataFrame, pd.Series)):
-        return json.loads(input_data.to_json()), {'predictions': type(input_data)}
-    elif isinstance(input_data, (dict, np.ndarray)) and 'X' not in input_data:
-        return input_data, {'predictions': type(input_data)}
+        return json.loads(input_data.to_json()), {"predictions": type(input_data)}
+    elif isinstance(input_data, (dict, np.ndarray)) and "X" not in input_data:
+        return input_data, {"predictions": type(input_data)}
 
     out_data = {}
     types_dict = {}
@@ -383,11 +383,11 @@ def convert_data_to_json(input_data: Dict) -> Tuple[Dict, Dict]:
         else:
             out_data[k] = v
 
-        if k.lower() in ['x', 'x_train', 'x_test']:
-            types_dict['predictions'] = type(v)
+        if k.lower() in ["x", "x_train", "x_test"]:
+            types_dict["predictions"] = type(v)
 
-    if 'predictions' not in types_dict.keys():
-        types_dict['predictions'] = pd.DataFrame
+    if "predictions" not in types_dict.keys():
+        types_dict["predictions"] = pd.DataFrame
 
     # out_json = json.dumps(out_data, cls=NpEncoder)
     return out_data, types_dict
@@ -408,7 +408,7 @@ def convert_json_to_data(json_data: Dict, types_dict: Dict) -> Dict:
         if goal_type == pd.DataFrame or goal_type == pd.Series:
             out_data[k] = goal_type(eval(v))
         elif goal_type == np.ndarray:
-            out_data[k] = np.array(v, dtype='O')
+            out_data[k] = np.array(v, dtype="O")
         else:
             out_data[k] = v
 
@@ -446,16 +446,18 @@ def tune_model(
     # build conclusion threshold tuning ranges
     conclusion_threshold_ranges, _ = generate_train_hyperparams(conclusion_tuning_range)
 
-    TUNING_RANGES = {'threshold': conclusion_threshold_ranges, 'ml_models': ml_ranges}
+    TUNING_RANGES = {"threshold": conclusion_threshold_ranges, "ml_models": ml_ranges}
     tuning_params, _ = generate_train_hyperparams(TUNING_RANGES)
 
     builder = ModelBuilder()
-    base_name = f'{prefix} - {base_model}'
+    base_name = f"{prefix} - {base_model}"
     model_df = model.tune_with_hyperparams(tuning_params, base_name=base_name)
     try:
         model_df.to_parquet(output_model_df_path)
     except Exception as e:
-        print(f'Failed to save model_df to {output_model_df_path}')
+        print(f"Failed to save model_df to {output_model_df_path}")
         print(e)
     if wait_for_tuning_to_complete:
-        builder.wait_for_tuning_to_complete(model_df, 10)
+        builder.wait_for_tuning_to_complete(
+            model_df, file_path=output_model_df_path, sleep_time=10
+        )

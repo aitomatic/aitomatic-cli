@@ -41,7 +41,7 @@ class ModelBuilder:
         model_type: str,
         model_name: str,
         knowledge_name: str,
-        data_name: str,
+        data_name: Optional[str] = None,
         ml_models: List[Any] = [],
         label_columns: Dict[str, Optional[Any]] = {},
         threshold: Any = {},
@@ -165,7 +165,12 @@ class ModelBuilder:
             print("Checking model status, e =", e)
             return "training"
 
-    def wait_for_tuning_to_complete(self, model_df: pd.DataFrame, sleep_time: int = 30):
+    def wait_for_tuning_to_complete(
+        self,
+        model_df: pd.DataFrame,
+        file_path: str = "tuning.parquet",
+        sleep_time: int = 30,
+    ):
         print("Waiting for training jobs to complete")
         while True:
             for i, row in model_df.iterrows():
@@ -179,6 +184,7 @@ class ModelBuilder:
             print(
                 f"Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]"
             )
+            model_df.to_parquet(file_path)
             if model_df["status"].isin(["training"]).any():
                 time.sleep(sleep_time)
             else:
