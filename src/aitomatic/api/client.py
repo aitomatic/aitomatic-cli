@@ -1,6 +1,7 @@
-import requests
-import json
 import os
+import json
+import requests
+from tqdm import tqdm
 from aitomatic.dsl.arl_handler import ARLHandler
 from aitomatic.objects.model import Model
 from aitomatic.objects.dataset import Dataset
@@ -69,7 +70,7 @@ class ProjectManager:
         self.headers = {
             'accept': 'application/json',
             'authorization': api_token,
-            'conent-type': 'application/json',
+            'Content-Type': 'application/json',
         }
         self.init_endpoints()
 
@@ -79,9 +80,18 @@ class ProjectManager:
         self.KNOWLEDGE_DETAIL = lambda id_: f'{self.API_ROOT}/knowledges/' + id_
         self.MODELS_LIST = f'{self.API_ROOT}/{self.project_id}/models'
         self.MODEL_DETAIL = lambda id_: f'{self.API_ROOT}/models/' + id_
+        self.MODEL_DELETE = f'{self.API_ROOT}/models/delete'
         self.MODEL_BUILD = f'{self.API_ROOT}/models'
         self.DATA_LIST = f'{self.API_ROOT}/{self.project_id}/data'
         self.DATA_DETAIL = lambda id_: f'{self.API_ROOT}/data/' + id_
+
+    def get_model_list(self):
+        resp = self.make_request('get', self.MODELS_LIST)
+        if resp:
+            models = []
+            for m in resp:
+                models.append(Model(m))
+            return models
 
     def get_model_info(self, model_name: str):
         id_ = self.get_model_id(model_name)
@@ -154,6 +164,18 @@ class ProjectManager:
                 result[key] = dataset_metadata.get(schema_mapping.get(key))
 
         return result
+
+    def delete_model_by_model_name(self, model_name):
+        data = {
+            'project': self.project_name,
+            'model_name': model_name
+        }
+        self.headers["Accept-Language"] = "en-US,en;q=0.9,vi;q=0.8,es;q=0.7"
+        make_request('post', self.MODEL_DELETE, headers=self.headers, json=data)
+
+    def delete_models(self, model_names):
+        for model_name in tqdm(model_names):
+            self.delete_model_by_model_name(model_name)
 
 
 def make_request(request_type: str, url: str, **kwargs):
