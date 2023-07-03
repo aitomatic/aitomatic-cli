@@ -6,14 +6,14 @@ class Dataset:
 
     @property
     def type(self) -> str:
-        return self.raw_data.get('type', '')
+        return self.raw_data.get("type", "")
 
     @property
     def metadata(self) -> dict:
-        if self.type == 'DATA':
-            return self.raw_data.get('dataset_metadata', {}).get('metadata', {})
-        if self.type == 'DESCRIBE':
+        if self.type == "DATA":
+            return self.raw_data.get("dataset_metadata", {}).get("metadata", {})
+        if self.type == "DESCRIBE":
             obj = {}
-            for var in self.raw_data.get('variables'):
-                obj[var['name']] = var
+            for var in self.raw_data.get("variables"):
+                obj[var["name"]] = var
             return obj
