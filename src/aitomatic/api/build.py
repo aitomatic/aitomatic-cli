@@ -155,12 +155,14 @@ class ModelBuilder:
             model_log.append(test_params)
         model_df = pd.DataFrame(model_log)
         model_df["status"] = "training"
+        model_df["output"] = {}
+
         return model_df
 
     def check_model_status(self, model_name):
         try:
             model_info = self.project.get_model_info(model_name)
-            return model_info.status.lower()
+            return model_info.status.lower(), model_info.model_output
         except Exception as e:
             print("Checking model status, e =", e)
             return "training"
@@ -175,8 +177,10 @@ class ModelBuilder:
         while True:
             for i, row in model_df.iterrows():
                 model_name = row["model_name"]
-                status = self.check_model_status(model_name)
+                status, output = self.check_model_status(model_name)
                 model_df.loc[i, "status"] = status
+                if output:
+                    model_df.at[i, "output"] = output
 
             success_length = len(model_df[model_df["status"] == "success"])
             error_length = len(model_df[model_df["status"] == "error"])
