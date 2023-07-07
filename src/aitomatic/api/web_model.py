@@ -2,6 +2,7 @@ import os
 import sys
 from typing import Dict, Tuple, Union, List, Any
 from itertools import product
+from multiprocessing.pool import ThreadPool
 
 from tqdm import tqdm
 from itertools import chain
@@ -96,9 +97,26 @@ class WebModel:
             f"{chunk_max /1024} kb or {N} data points"
         )
         out = []
-        for Xi in tqdm(self.slice_data(X, N), total=total_batches):
+        sliced_data = self.slice_data(X, N)
+        for Xi in tqdm(sliced_data, total=total_batches):
             pred = self.predict({self.data_key: Xi, **Xother})[self.output_key]
             out.append(pred)
+        
+        # num_threads = 4
+        # pools = ThreadPool(num_threads)
+        # thread_results = []
+        # # for Xi in tqdm(sliced_data, total=total_batches):
+
+        # for i, Xi in enumerate(sliced_data):
+        #     print(f"chunkId: {i}")
+        #     thread_results.append(pools.apply_async(self.predict, args=({self.data_key: Xi, **Xother}, i)))
+        
+        # print("before out")
+        # out1 = [res.get() for res in thread_results]
+        # print(f"after out1: {out1}")
+        # # print(f"OUT1: {out1}")
+        # out = [o[0][self.output_key] for o in out1]
+        # print(f"Out: {out}")
 
         predictions = self.merge_items(out, type(X))
         return {self.output_key: predictions}
@@ -156,7 +174,7 @@ class WebModel:
             Nj = Ni
             Ni = Ni + N
 
-    def predict(self, input_data: Dict) -> Dict:
+    def predict(self, input_data: Dict, chunk_id: int = None) -> Dict:
         """
         Logic to generate prediction from data
 
@@ -207,7 +225,8 @@ class WebModel:
         # Convert response back to correct types
         # predictions format to match input_data['X'] format/types
         predictions = convert_json_to_data(resp_data["result"], types_dict)
-
+        if chunk_id != None:
+            return predictions, chunk_id
         return predictions
 
     def process(self, input_data: Dict) -> Dict:

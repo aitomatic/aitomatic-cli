@@ -1,6 +1,7 @@
 import os
 import time
 import pandas as pd
+import json
 from aitomatic.api.client import get_api_root, ProjectManager
 from aitomatic.api import model_params as mp
 from aitomatic.dsl.arl_handler import ARLHandler
@@ -123,6 +124,14 @@ class ModelBuilder:
 
         return conclusion_threshold_hyperparms
 
+    def update_training_job_status(self, training_jobs: dict) -> dict:
+        for model_name in list(training_jobs.keys):
+            status, model = self.check_model_status(model_name=model_name)
+            if (status != 'training'):
+                training_jobs.pop(model_name)
+        return training_jobs
+
+    
     def tune_model_with_hyperparams(
         self,
         tuning_params: List[Any],
@@ -135,24 +144,55 @@ class ModelBuilder:
         metadata: Any,
     ) -> pd.DataFrame:
         model_log = []
-        print("Creating training jobs")
-        for i, item in enumerate(tuning_params):
-            test_params = {**item}
-            model_name = f"{base_name} {i}"
-            resp = self.build_model(
-                model_type,
-                model_name,
-                knowledge_name,
-                data_name,
-                mapping_data=mapping_data,
-                label_columns=label_columns,
-                metadata=metadata,
-                **item,
-            )
-            print(f'Training model {model_name}: {resp["id"]}')
-            test_params["id"] = resp["id"]
-            test_params["model_name"] = model_name
-            model_log.append(test_params)
+        # print(f"Creating training jobs, {tuning_params}")
+        max_training_tasks = 16
+        current_training_tasks = {}
+        num_executed_jobs = 0
+        while num_executed_jobs < max_training_tasks:
+            if len(current_training_tasks) < max_training_tasks:
+                item = tuning_params[num_executed_jobs]
+                test_params = {**item}
+                model_name = f'{base_name} {num_executed_jobs}'
+                resp = self.build_model(
+                    model_type,
+                    model_name,
+                    knowledge_name,
+                    data_name,
+                    mapping_data=mapping_data,
+                    label_columns=label_columns,
+                    metadata=metadata,
+                    **item,
+                )
+                print(f'Training model {model_name}: {resp["id"]}')
+                test_params['id'] = resp['id']
+                test_params['model_name'] = model_name
+                test_params['status'] = 'training'
+                model_log.append(test_params)
+                current_training_tasks[model_name] = 'training'
+                num_executed_jobs += 1
+            else:
+                current_training_tasks = self.update_training_job_status(current_training_tasks)
+                time.sleep(5)
+                
+        # print(f'Creating training {len(tuning_params)} jobs')
+        # for i, item in enumerate(tuning_params):
+        #     test_params = {**item}
+        #     model_name = f"{base_name} {i}"
+        #     resp = self.build_model(
+        #         model_type,
+        #         model_name,
+        #         knowledge_name,
+        #         data_name,
+        #         mapping_data=mapping_data,
+        #         label_columns=label_columns,
+        #         metadata=metadata,
+        #         **item,
+        #     )
+        #     print(f'Training model {model_name}: {resp["id"]}')
+        #     test_params["id"] = resp["id"]
+        #     print(f'Creating training job for {model_name}: {test_params}')
+        #     test_params["model_name"] = model_name
+        #     model_log.append(test_params)
         model_df = pd.DataFrame(model_log)
         model_df["status"] = "training"
         model_df["output"] = {}
@@ -180,7 +220,9 @@ class ModelBuilder:
                 status, output = self.check_model_status(model_name)
                 model_df.loc[i, "status"] = status
                 if output:
-                    model_df.at[i, "output"] = output
+                    model_df.at[i, "output"] = json.dumps(output)
+                else:
+                    model_df.at[i, "output"] = None
 
             success_length = len(model_df[model_df["status"] == "success"])
             error_length = len(model_df[model_df["status"] == "error"])
@@ -188,6 +230,7 @@ class ModelBuilder:
             print(
                 f"Waiting for training jobs to complete: [{success_length} success, {error_length} error, {df_length} total]"
             )
+            # print(f"MODEL_DF: {model_df.to_string()}")
             model_df.to_parquet(file_path)
             if model_df["status"].isin(["training"]).any():
                 time.sleep(sleep_time)
@@ -224,15 +267,16 @@ class MLParamBuilder:
 
     def builld_logistic_regression_param(
         self,
+        # **kwargs
         # threshold: float = 0.5,
-        # C: float = 1.0,
+        C: float = 1.0,
         # penalty: str = 'l2'
     ):
         return {
             "type": "LogisticRegression",
             "hyperparams": {
                 # 'threshold': threshold,
-                # 'C': C,
+                'C': C,
                 # 'penalty': penalty,
             },
         }
