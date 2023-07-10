@@ -2,7 +2,6 @@ import os
 import sys
 from typing import Dict, Tuple, Union, List, Any
 from itertools import product
-from multiprocessing.pool import ThreadPool
 
 from tqdm import tqdm
 from itertools import chain
@@ -76,6 +75,7 @@ class WebModel:
 
         self.KNOWLEDGE_DETAIL = lambda id_: f"{self.CLIENT_API_ROOT}/knowledges/" + id_
         self.DATA_DETAIL = lambda id_: f"{self.CLIENT_API_ROOT}/data/" + id_
+        self.RUN_INFERENCES = f"{self.CLIENT_API_ROOT}/inference"
 
     def batch_predict(self, input_data: Dict) -> Dict:
         """
@@ -101,7 +101,7 @@ class WebModel:
         for Xi in tqdm(sliced_data, total=total_batches):
             pred = self.predict({self.data_key: Xi, **Xother})[self.output_key]
             out.append(pred)
-        
+
         # num_threads = 4
         # pools = ThreadPool(num_threads)
         # thread_results = []
@@ -110,7 +110,7 @@ class WebModel:
         # for i, Xi in enumerate(sliced_data):
         #     print(f"chunkId: {i}")
         #     thread_results.append(pools.apply_async(self.predict, args=({self.data_key: Xi, **Xother}, i)))
-        
+
         # print("before out")
         # out1 = [res.get() for res in thread_results]
         # print(f"after out1: {out1}")
@@ -346,6 +346,24 @@ class WebModel:
         self.metrics[key] = value
         self._save_metrics()
 
+    def run_inference(self, model_name: list, dataset_name: str):
+        data = {
+            "model_name": model_name,
+            "dataset_name": dataset_name,
+            "project_name": self.project_name,
+        }
+
+        resp = requests.post(
+            self.RUN_INFERENCES,
+            headers={
+                "accept": "application/json",
+                "authorization": self.api_token,
+            },
+            json=data,
+        )
+
+        return resp
+
     @staticmethod
     def get_model_names(api_token=None, project_name=None):
         if project_name is None:
@@ -477,6 +495,28 @@ def tune_model(
         print(f"Failed to save model_df to {output_model_df_path}")
         print(e)
     if wait_for_tuning_to_complete:
-        builder.wait_for_tuning_to_complete(
-            model_df, file_path=output_model_df_path, sleep_time=10
-        )
+        # builder.wait_for_tuning_to_complete(
+        #     model_df, file_path=output_model_df_path, sleep_time=10
+        # )
+
+        builder.wait_for_task_to_complete(file_path=output_model_df_path, sleep_time=10)
+
+
+def run_inference(project_name: str, model_names: list, dataset_name: str, **kwargs):
+    project_manager = ProjectManager(project_name=project_name)
+
+    results = project_manager.run_inference(
+        model_name=model_names, dataset_name=dataset_name
+    )
+
+    inference_tasks = results.get("results", [])
+
+    df = pd.DataFrame(inference_tasks)
+
+    file_path = kwargs.get("file_path", "infer_results.parquet")
+    df.to_parquet(file_path)
+
+    if kwargs.get("wait_for_inference_to_complete", True):
+        project_manager.wait_for_inference_to_complete(file_path, sleep_time=10)
+
+    return inference_tasks
