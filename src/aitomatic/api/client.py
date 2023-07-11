@@ -91,6 +91,9 @@ class ProjectManager:
         self.BULK_MODEL_DETAIL = f"{self.API_ROOT}/models/status"
         self.RUN_INFERENCES = f"{self.API_ROOT}/inference"
         self.BULK_INFERENCE_DETAIL = f"{self.API_ROOT}/inference/status"
+        self.DOWNLOAD_INFERENCE = (
+            lambda id_: f"{self.API_ROOT}/inference/{id_}/download"
+        )
 
     def get_model_list(self):
         resp = self.make_request("get", self.MODELS_LIST)
@@ -279,6 +282,28 @@ class ProjectManager:
             else:
                 break
         return model_df
+
+    def download_inference_file(self, id: str, file_path: str):
+        url = self.DOWNLOAD_INFERENCE(id)
+        resp = requests.post(
+            url,
+            headers={
+                "authorization": self.api_token,
+            },
+        )
+        with open(file_path, "wb") as f:
+            f.write(resp.content)
+
+    def download_inference_results(self, folder_path: str, df: pd.DataFrame):
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        for index, row in df.iterrows():
+            if row["status"] == "success":
+                id = row["id"]
+                file_name = row["file_name"]
+                file_path = os.path.join(folder_path, file_name)
+                self.download_inference_file(id, file_path)
 
 
 def make_request(request_type: str, url: str, **kwargs):

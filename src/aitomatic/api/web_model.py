@@ -517,6 +517,10 @@ def run_inference(project_name: str, model_names: list, dataset_name: str, **kwa
     df.to_parquet(file_path)
 
     if kwargs.get("wait_for_inference_to_complete", True):
-        project_manager.wait_for_inference_to_complete(file_path, sleep_time=10)
+        df = project_manager.wait_for_inference_to_complete(file_path, sleep_time=10)
+
+    if kwargs.get("download_inference_results", False):
+        output_folder = kwargs.get("output_folder", "inference_results")
+        project_manager.download_inference_results(folder_path=output_folder, df=df)
 
     return inference_tasks
