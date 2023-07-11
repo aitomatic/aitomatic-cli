@@ -5,6 +5,8 @@ from tqdm import tqdm
 from aitomatic.dsl.arl_handler import ARLHandler
 from aitomatic.objects.model import Model
 from aitomatic.objects.dataset import Dataset
+import time
+import pandas as pd
 
 
 MODEL_API_ROOT = {
@@ -86,6 +88,12 @@ class ProjectManager:
         self.DATA_LIST = f"{self.API_ROOT}/{self.project_id}/data"
         self.DATA_DETAIL = lambda id_: f"{self.API_ROOT}/data/" + id_
         self.DATA_UPLOAD = f"{self.API_ROOT}/data/upload"
+        self.BULK_MODEL_DETAIL = f"{self.API_ROOT}/models/status"
+        self.RUN_INFERENCES = f"{self.API_ROOT}/inference"
+        self.BULK_INFERENCE_DETAIL = f"{self.API_ROOT}/inference/status"
+        self.DOWNLOAD_INFERENCE = (
+            lambda id_: f"{self.API_ROOT}/inference/{id_}/download"
+        )
 
     def get_model_list(self):
         resp = self.make_request("get", self.MODELS_LIST)
@@ -191,6 +199,111 @@ class ProjectManager:
             data=data,
             files={"file": (file_name, file, "application/parquet")},
         )
+
+    def get_model_status_bulk(self, ids):
+        data = {"ids": ids}
+        resp = make_request(
+            "post",
+            self.BULK_MODEL_DETAIL,
+            headers={
+                "accept": "application/json",
+                "authorization": self.api_token,
+            },
+            json=data,
+        )
+        status = []
+        output = []
+        for x in resp:
+            status.append(x["status"].lower())
+            output.append(x["output"] if x["output"] else None)
+        return status, output
+
+    def run_inference(self, model_name: list, dataset_name: str):
+        data = {
+            "model_name": model_name,
+            "dataset_name": dataset_name,
+            "project_name": self.project_name,
+        }
+
+        resp = make_request(
+            "post",
+            self.RUN_INFERENCES,
+            headers={
+                "accept": "application/json",
+                "authorization": self.api_token,
+            },
+            json=data,
+        )
+
+        return resp
+
+    def get_inference_status_bulk(self, ids):
+        data = {"ids": ids}
+        resp = make_request(
+            "post",
+            self.BULK_INFERENCE_DETAIL,
+            headers={
+                "accept": "application/json",
+                "authorization": self.api_token,
+            },
+            json=data,
+        )
+        status = []
+        for x in resp.get("results", []):
+            status.append(x["status"].lower())
+        return status
+
+    def wait_for_inference_to_complete(self, file_path: str, sleep_time: int = 10):
+        print("Waiting for inference jobs to complete")
+        model_df = pd.read_parquet(file_path)
+        while True:
+            not_done_df: pd.DataFrame = model_df[
+                (model_df["status"] != "success") & (model_df["status"] != "error")
+            ]
+            ids = not_done_df["id"].to_list()
+
+            # call request to bulk get model info
+            status = self.get_inference_status_bulk(ids)
+
+            not_done_df.loc[:, "status"] = status
+
+            model_df.update(not_done_df)
+
+            success_length = len(model_df[model_df["status"] == "success"])
+            error_length = len(model_df[model_df["status"] == "error"])
+            df_length = len(model_df)
+            print(
+                f"Waiting for inference jobs to complete: [{success_length} success, {error_length} error, {df_length} total]"
+            )
+            # print(f"MODEL_DF: {model_df.to_string()}")
+            model_df.to_parquet(file_path)
+            if model_df["status"].isin(["running"]).any():
+                time.sleep(sleep_time)
+            else:
+                break
+        return model_df
+
+    def download_inference_file(self, id: str, file_path: str):
+        url = self.DOWNLOAD_INFERENCE(id)
+        resp = requests.post(
+            url,
+            headers={
+                "authorization": self.api_token,
+            },
+        )
+        with open(file_path, "wb") as f:
+            f.write(resp.content)
+
+    def download_inference_results(self, folder_path: str, df: pd.DataFrame):
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        for index, row in df.iterrows():
+            if row["status"] == "success":
+                id = row["id"]
+                file_name = row["file_name"]
+                file_path = os.path.join(folder_path, file_name)
+                self.download_inference_file(id, file_path)
 
 
 def make_request(request_type: str, url: str, **kwargs):
