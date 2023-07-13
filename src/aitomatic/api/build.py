@@ -127,11 +127,10 @@ class ModelBuilder:
     def update_training_job_status(self, training_jobs: dict) -> dict:
         for model_name in list(training_jobs.keys):
             status, model = self.check_model_status(model_name=model_name)
-            if (status != 'training'):
+            if status != "training":
                 training_jobs.pop(model_name)
         return training_jobs
 
-    
     def tune_model_with_hyperparams(
         self,
         tuning_params: List[Any],
@@ -145,54 +144,54 @@ class ModelBuilder:
     ) -> pd.DataFrame:
         model_log = []
         # print(f"Creating training jobs, {tuning_params}")
-        max_training_tasks = 16
-        current_training_tasks = {}
-        num_executed_jobs = 0
-        while num_executed_jobs < max_training_tasks:
-            if len(current_training_tasks) < max_training_tasks:
-                item = tuning_params[num_executed_jobs]
-                test_params = {**item}
-                model_name = f'{base_name} {num_executed_jobs}'
-                resp = self.build_model(
-                    model_type,
-                    model_name,
-                    knowledge_name,
-                    data_name,
-                    mapping_data=mapping_data,
-                    label_columns=label_columns,
-                    metadata=metadata,
-                    **item,
-                )
-                print(f'Training model {model_name}: {resp["id"]}')
-                test_params['id'] = resp['id']
-                test_params['model_name'] = model_name
-                test_params['status'] = 'training'
-                model_log.append(test_params)
-                current_training_tasks[model_name] = 'training'
-                num_executed_jobs += 1
-            else:
-                current_training_tasks = self.update_training_job_status(current_training_tasks)
-                time.sleep(5)
-                
-        # print(f'Creating training {len(tuning_params)} jobs')
-        # for i, item in enumerate(tuning_params):
-        #     test_params = {**item}
-        #     model_name = f"{base_name} {i}"
-        #     resp = self.build_model(
-        #         model_type,
-        #         model_name,
-        #         knowledge_name,
-        #         data_name,
-        #         mapping_data=mapping_data,
-        #         label_columns=label_columns,
-        #         metadata=metadata,
-        #         **item,
-        #     )
-        #     print(f'Training model {model_name}: {resp["id"]}')
-        #     test_params["id"] = resp["id"]
-        #     print(f'Creating training job for {model_name}: {test_params}')
-        #     test_params["model_name"] = model_name
-        #     model_log.append(test_params)
+        # max_training_tasks = 16
+        # current_training_tasks = {}
+        # num_executed_jobs = 0
+        # while num_executed_jobs < max_training_tasks:
+        #     if len(current_training_tasks) < max_training_tasks:
+        #         item = tuning_params[num_executed_jobs]
+        #         test_params = {**item}
+        #         model_name = f'{base_name} {num_executed_jobs}'
+        #         resp = self.build_model(
+        #             model_type,
+        #             model_name,
+        #             knowledge_name,
+        #             data_name,
+        #             mapping_data=mapping_data,
+        #             label_columns=label_columns,
+        #             metadata=metadata,
+        #             **item,
+        #         )
+        #         print(f'Training model {model_name}: {resp["id"]}')
+        #         test_params['id'] = resp['id']
+        #         test_params['model_name'] = model_name
+        #         test_params['status'] = 'training'
+        #         model_log.append(test_params)
+        #         current_training_tasks[model_name] = 'training'
+        #         num_executed_jobs += 1
+        #     else:
+        #         current_training_tasks = self.update_training_job_status(current_training_tasks)
+        #         time.sleep(5)
+
+        print(f"Creating training {len(tuning_params)} jobs")
+        for i, item in enumerate(tuning_params):
+            test_params = {**item}
+            model_name = f"{base_name} {i}"
+            resp = self.build_model(
+                model_type,
+                model_name,
+                knowledge_name,
+                data_name,
+                mapping_data=mapping_data,
+                label_columns=label_columns,
+                metadata=metadata,
+                **item,
+            )
+            print(f'Training model {model_name}: {resp["id"]}')
+            test_params["id"] = resp["id"]
+            print(f"Creating training job for {model_name}: {test_params}")
+            test_params["model_name"] = model_name
+            model_log.append(test_params)
         model_df = pd.DataFrame(model_log)
         model_df["status"] = "training"
         model_df["output"] = {}
@@ -276,7 +275,7 @@ class MLParamBuilder:
             "type": "LogisticRegression",
             "hyperparams": {
                 # 'threshold': threshold,
-                'C': C,
+                "C": C,
                 # 'penalty': penalty,
             },
         }
